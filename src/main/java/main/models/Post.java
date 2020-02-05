@@ -21,7 +21,7 @@ public class Post
     @Column(name = "moderator_id")
     private User userModerator = null;*/
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Column(nullable = false)
