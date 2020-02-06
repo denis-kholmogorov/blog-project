@@ -17,17 +17,18 @@ public class Post
     @Column(name = "moderation_status", nullable = false)
     private ModerationStatus moderationStatus;
 
-   /* @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "moderator_id")
-    private User userModerator = null;*/
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User userModerator = null;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, insertable=false, updatable=false)
     private User user;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String text;
 
     @Column(name = "view_count", nullable = false)

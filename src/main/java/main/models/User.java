@@ -3,6 +3,7 @@ package main.models;
 import javax.persistence.*;
 import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -29,7 +30,9 @@ public class User
     private String photo;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Post> postsSet;
+    private Set<Post> postsSet;
+
+    @OneToMany(mappedBy = "")
 
     //--------------------------------------------------
 
