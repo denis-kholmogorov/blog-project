@@ -2,7 +2,6 @@ package main.models;
 
 import javax.persistence.*;
 import java.sql.Date;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -14,7 +13,7 @@ public class User
     private Integer id;
 
     @Column(name = "is_moderator", nullable = false)
-    private Byte isModerator;
+    private Short isModerator;
 
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
     private Date regTime;
@@ -45,11 +44,11 @@ public class User
         this.id = id;
     }
 
-    public Byte getIsModerator() {
+    public Short getIsModerator() {
         return isModerator;
     }
 
-    public void setIsModerator(Byte isModerator) {
+    public void setIsModerator(Short isModerator) {
         this.isModerator = isModerator;
     }
 
