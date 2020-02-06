@@ -32,7 +32,8 @@ public class User
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Post> postsSet;
 
-    @OneToMany(mappedBy = "")
+    @OneToMany(mappedBy = "moderatorId")
+    private Set<Post> moderatorsSet;
 
     //--------------------------------------------------
 

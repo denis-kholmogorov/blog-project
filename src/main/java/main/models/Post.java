@@ -14,12 +14,12 @@ public class Post
     private byte isActive;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false)
+    @Column(name = "moderation_status", nullable = false, columnDefinition = "varchar(255) default 'NEW'")
     private ModerationStatus moderationStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User userModerator = null;
+    private User moderatorId = null;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, insertable=false, updatable=false)
