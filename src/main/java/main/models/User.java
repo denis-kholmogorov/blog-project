@@ -10,13 +10,13 @@ import java.util.Set;
 public class User
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "is_moderator", nullable = false)
     private Byte isModerator;
 
-    @Column(name = "reg_time", nullable = false)
+    @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
     private Date regTime;
 
     @Column(nullable = false)
