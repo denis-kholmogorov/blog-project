@@ -4,11 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
-@Table(name = "tags")
-public class Tag
+@Table(name="global_settings")
+public class GlobalSettings
 {
     @Getter
     @Setter
@@ -19,13 +18,17 @@ public class Tag
     @Getter
     @Setter
     @Column(nullable = false)
+    private String code;
+
+    @Getter
+    @Setter
+    @Column(nullable = false)
     private String name;
 
     @Getter
     @Setter
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "tag2post",
-            joinColumns = {@JoinColumn(name = "tag_id")},
-            inverseJoinColumns = {@JoinColumn(name = "post_id")})
-    private List<Post> posts;
+    @Column(nullable = false)
+    private String value;
+
+
 }
