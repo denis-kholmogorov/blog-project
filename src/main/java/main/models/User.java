@@ -21,7 +21,7 @@ public class User
     @Getter
     @Setter
     @Column(name = "is_moderator", nullable = false)
-    private Short isModerator;
+    private byte isModerator;
 
     @Getter
     @Setter
@@ -48,6 +48,12 @@ public class User
 
     @Getter
     @Setter
+    @Column(nullable = false)
+    private String email;
+
+
+    @Getter
+    @Setter
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Post> postsSet;
 
@@ -56,5 +62,9 @@ public class User
     @OneToMany(mappedBy = "moderatorId")
     private Set<Post> moderatorsSet;
 
-    //--------------------------------------------------
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<PostVotes> setLikesPost;
+
 }

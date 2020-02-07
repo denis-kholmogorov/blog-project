@@ -23,9 +23,6 @@ public class Tag
 
     @Getter
     @Setter
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "tag2post",
-            joinColumns = {@JoinColumn(name = "tag_id")},
-            inverseJoinColumns = {@JoinColumn(name = "post_id")})
-    private List<Post> posts;
+    @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TagToPost> posts;
 }

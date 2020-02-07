@@ -18,11 +18,13 @@ public class TagToPost
 
     @Getter
     @Setter
-    @Column(name = "post_id", nullable = false)
-    private Integer post;
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
     @Getter
     @Setter
-    @Column(name = "tag_id", nullable = false)
-    private Integer tag;
+    @ManyToOne
+    @JoinColumn(name = "tag_id", nullable = false)
+    private Tag tag;
 }

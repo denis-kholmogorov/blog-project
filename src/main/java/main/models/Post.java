@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "posts")
@@ -24,13 +26,18 @@ public class Post
     @Getter
     @Setter
     @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false, columnDefinition = "varchar(255) default 'NEW'")
+    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINE') default 'NEW'")
     private ModerationStatus moderationStatus;
 
     @Getter
     @Setter
+    @Column(nullable = false, columnDefinition = "datetime")
+    private Date time;
+
+    @Getter
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false, insertable=false, updatable=false)
     private User moderatorId = null;
 
     @Getter
@@ -56,10 +63,17 @@ public class Post
 
     @Getter
     @Setter
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(name = "tag2post",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private List<Tag> tags;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TagToPost> seTtags;
+
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  //example
+    private Set<PostVotes> setLikesUsers;
 
 }
+
+/*@Getter
+    @Setter
+    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINE') default 'NEW'")
+    private ModerationStatus moderationStatus;*/
