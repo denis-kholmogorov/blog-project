@@ -1,8 +1,9 @@
-package main.models;
+package main.model;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TagRepository extends CrudRepository<Tag, Integer> {
+public interface PostVotesRepository extends CrudRepository<PostVotes, Integer>
+{
 }

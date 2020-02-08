@@ -1,29 +1,22 @@
-package main.models;
+package main.model;
 
-
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Data;
 import javax.persistence.*;
 
+@Data
 @Entity
 @Table(name = "tag2post")
 public class TagToPost
 {
-    @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
-    @Getter
-    @Setter
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    @Getter
-    @Setter
     @ManyToOne
     @JoinColumn(name = "tag_id", nullable = false)
     private Tag tag;

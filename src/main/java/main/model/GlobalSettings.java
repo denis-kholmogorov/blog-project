@@ -1,33 +1,25 @@
-package main.models;
+package main.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Data;
 import javax.persistence.*;
 
+@Data
 @Entity
 @Table(name="global_settings")
 public class GlobalSettings
 {
-    @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "code", nullable = false)
     private String code;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "value", nullable = false)
     private String value;
 
 

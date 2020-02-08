@@ -1,70 +1,50 @@
-package main.models;
+package main.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.persistence.*;
 import java.sql.Date;
 import java.util.Set;
 
+@Data
 @Entity
 @Table(name = "users")
 public class User
 {
-
-    @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
-    @Getter
-    @Setter
     @Column(name = "is_moderator", nullable = false)
     private byte isModerator;
 
-    @Getter
-    @Setter
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
     private Date regTime;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Getter
-    @Setter
+    @Column(name = "code")
     private String code;
 
-    @Getter
-    @Setter
+
+    @Column(name = "photo")
     private String photo;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "email", nullable = false)
     private String email;
 
-
-    @Getter
-    @Setter
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Post> postsSet;
 
-    @Getter
-    @Setter
-    @OneToMany(mappedBy = "moderatorId")
-    private Set<Post> moderatorsSet;
-
-    @Getter
-    @Setter
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<PostVotes> setLikesPost;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<PostComments> comments;
 
 }

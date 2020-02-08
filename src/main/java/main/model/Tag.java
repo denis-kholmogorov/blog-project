@@ -1,28 +1,23 @@
-package main.models;
+package main.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Data;
 import javax.persistence.*;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "tags")
 public class Tag
 {
-    @Getter
-    @Setter
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
 
-    @Getter
-    @Setter
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Getter
-    @Setter
     @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<TagToPost> posts;
 }
