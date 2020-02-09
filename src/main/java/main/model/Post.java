@@ -52,7 +52,3 @@ public class Post
     private Set<PostComments> comments;
 
 }
-
-/*
-    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINE') default 'NEW'")
-    private ModerationStatus moderationStatus;*/

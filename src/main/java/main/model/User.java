@@ -32,7 +32,7 @@ public class User
     private String code;
 
 
-    @Column(name = "photo")
+    @Column(name = "photo", columnDefinition = "text")
     private String photo;
 
     @Column(name = "email", nullable = false)
