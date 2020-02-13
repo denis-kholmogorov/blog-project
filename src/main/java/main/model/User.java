@@ -1,15 +1,12 @@
 package main.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+
 import lombok.Getter;
 import lombok.Setter;
-import main.DTOEntity.UserDto;
-
 import javax.persistence.*;
 import java.sql.Date;
 import java.util.Set;
-
 
 
 @Entity

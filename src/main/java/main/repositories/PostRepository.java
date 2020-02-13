@@ -1,6 +1,5 @@
 package main.repositories;
 
-import main.DTOEntity.PostDto;
 import main.model.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
