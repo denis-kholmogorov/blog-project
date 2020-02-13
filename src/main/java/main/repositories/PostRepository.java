@@ -42,4 +42,11 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
             nativeQuery = true)
     Page<Post> findAllPostsSortEarly(Pageable paging);
 
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT * FROM posts " +
+                   "WHERE is_active = 1 AND moderation_status = 'ACCEPTED' " +
+                   "AND time < CURTIME() AND :date = DATE(time)"
+                    , nativeQuery = true)
+    Page<Post> findAllPostsByDate(String date, Pageable paging);
+
 }

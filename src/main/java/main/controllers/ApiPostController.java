@@ -33,7 +33,8 @@ public class ApiPostController
     @GetMapping(params = {"offset", "limit", "mode"})
     public ResponseEntity<ListPostsDto> listPost(@RequestParam("offset") int offset,
                                                  @RequestParam("limit") int limit,
-                                                 @RequestParam("mode") String mode){
+                                                 @RequestParam("mode") String mode)
+    {
         Page<Post> posts = null;
         Pageable paging = PageRequest.of(offset, limit);
 
@@ -53,6 +54,20 @@ public class ApiPostController
         List<PostDto> postsDtoPostsDto = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
         return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
     }
+
+    @GetMapping(value = "/byDate", params = {"offset", "limit", "date"})
+    public ResponseEntity<ListPostsDto> listPostByDate(@RequestParam("offset") int offset,
+                                                       @RequestParam("limit") int limit,
+                                                       @RequestParam("date") String date)
+    {
+        Pageable paging = PageRequest.of(offset, limit);
+        Page<Post> posts = postRepository.findAllPostsByDate(date, paging);
+
+        List<PostDto> postsDtoPostsDto = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
+    }
+
+
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
