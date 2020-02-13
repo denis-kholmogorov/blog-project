@@ -67,7 +67,16 @@ public class ApiPostController
         return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
     }
 
-
+    @GetMapping(value = "/byTag", params = {"offset", "limit", "tag"})
+    public ResponseEntity<ListPostsDto> listPostByTag(@RequestParam("offset") int offset,
+                                                       @RequestParam("limit") int limit,
+                                                       @RequestParam("tag") String tag)
+    {
+        Pageable paging = PageRequest.of(offset, limit);
+        Page<Post> posts = postRepository.findAllPostsByTag(tag, paging);
+        List<PostDto> postsDtoPostsDto = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
+    }
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
