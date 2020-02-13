@@ -1,8 +1,7 @@
 package main.controllers;
 
-import main.DTOEntity.AnswerDto;
+import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDto;
-import main.DTOEntity.PostsDto;
 import main.model.Post;
 import main.repositories.PostRepository;
 import org.modelmapper.ModelMapper;
@@ -32,9 +31,9 @@ public class ApiPostController
     ModelMapper modelMapper;
 
     @GetMapping(params = {"offset", "limit", "mode"})
-    public ResponseEntity<AnswerDto> listPost(@RequestParam("offset") int offset,
-                                              @RequestParam("limit") int limit,
-                                              @RequestParam("mode") String mode){
+    public ResponseEntity<ListPostsDto> listPost(@RequestParam("offset") int offset,
+                                                 @RequestParam("limit") int limit,
+                                                 @RequestParam("mode") String mode){
         Page<Post> posts = null;
         Pageable paging = PageRequest.of(offset, limit);
         Integer countPosts = postRepository.findAllCountPosts();
@@ -43,11 +42,7 @@ public class ApiPostController
             posts = postRepository.findAllPostsSortRecent(paging);
         }
         if(mode.equals("popular")){
-            List<PostDto> postDtos = postRepository.findAllPostsSortComments(paging).getContent();
-            List<PostsDto> postsDtoPostsDto = postDtos.stream().map(this::convertToDTO).collect(Collectors.toList());
-            AnswerDto answerDto = new AnswerDto(countPosts, postsDtoPostsDto);
-            return ResponseEntity.ok(answerDto);
-
+            posts = postRepository.findAllPostsSortComments(paging);
         }
         if(mode.equals("best")){
             posts = postRepository.findAllPostsSortLikes(paging);
@@ -56,12 +51,16 @@ public class ApiPostController
             posts = postRepository.findAllPostsSortEarly(paging);
         }
 
-       // List<PostDto> postDTOS = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
-        return null;//ResponseEntity.ok().body(postDTOS);
+        List<PostDto> postsDtoPostsDto = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(new ListPostsDto(countPosts, postsDtoPostsDto));
     }
 
-    private PostsDto convertToDTO(PostDto post) {
-        PostsDto postDto = modelMapper.map(post, PostsDto.class);
+    private PostDto convertToDTO(Post post) {
+        PostDto postDto = modelMapper.map(post, PostDto.class);
+        postDto.setLikesCount(post.getSetLikesUsers().stream().filter(l->{return l.getValue() == 1;}).count());
+        postDto.setDislikesCount(post.getSetLikesUsers().stream().filter(l->{return l.getValue() == -1;}).count());
+        postDto.setAnnounce(post.getText());
+        postDto.setCommentCounts(post.getComments().size());
         return postDto;
     }
 

@@ -7,9 +7,9 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class AnswerDto
+public class ListPostsDto
 {
     Integer count;
 
-    List<PostsDto> posts;
+    List<PostDto> posts;
 }
