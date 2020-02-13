@@ -18,6 +18,9 @@ public class PostComments
     @Column(name = "parent_id")
     private Integer parentId;
 
+    @Column(name = "comment", nullable = false, columnDefinition = "text")
+    private String comment;
+
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
