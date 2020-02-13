@@ -13,11 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
 {
     @Transactional(readOnly = true)
-    @Query(value = "SELECT COUNT(p) FROM Post p " +
-            "WHERE is_active = 1 AND moderation_status = 'ACCEPTED' AND p.time < CURTIME()")
-        Integer findAllCountPosts();
-
-    @Transactional(readOnly = true)
     @Query(value = "SELECT * FROM posts " +
                    "WHERE is_active = 1 AND moderation_status = 'ACCEPTED' AND time < CURTIME() " +
                    "ORDER BY time DESC",

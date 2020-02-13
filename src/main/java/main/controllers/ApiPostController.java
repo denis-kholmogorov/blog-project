@@ -36,7 +36,6 @@ public class ApiPostController
                                                  @RequestParam("mode") String mode){
         Page<Post> posts = null;
         Pageable paging = PageRequest.of(offset, limit);
-        Integer countPosts = postRepository.findAllCountPosts();
 
         if(mode.equals("recent")) {
             posts = postRepository.findAllPostsSortRecent(paging);
@@ -52,7 +51,7 @@ public class ApiPostController
         }
 
         List<PostDto> postsDtoPostsDto = posts.toList().stream().map(this::convertToDTO).collect(Collectors.toList());
-        return ResponseEntity.ok(new ListPostsDto(countPosts, postsDtoPostsDto));
+        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
     }
 
     private PostDto convertToDTO(Post post) {
