@@ -2,9 +2,12 @@ package main.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
 
 
@@ -33,7 +36,7 @@ public class Post
     @Setter
     @Getter
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Date time;
+    private Calendar time;
 
     @Setter
     @Getter
@@ -64,16 +67,23 @@ public class Post
     @Setter
     @Getter
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<TagToPost> seTtags;
+    private List<TagToPost> setTags;
 
     @Setter
     @Getter
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  //example
-    private Set<PostVotes> setLikesUsers;
+    @Where(clause = "value = 1")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  //example
+    private List<PostVotes> likesUsers;
+
+    @Setter
+    @Getter
+    @Where(clause = "value = -1")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  //example
+    private List<PostVotes> disLikesUsers;
 
     @Setter
     @Getter
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PostComments> comments;
+    private List<PostComments> comments;
 
 }
