@@ -1,5 +1,6 @@
 package main.services;
 
+import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDto;
 import main.model.ModerationStatus;
 import main.model.Post;
@@ -24,7 +25,7 @@ public class PostsService {
     @Autowired
     ModelMapper modelMapper;
 
-    public List<PostDto> findAllAndSort(Integer offset, Integer limit, String mode)
+    public ListPostsDto findAllAndSort(Integer offset, Integer limit, String mode)
     {
         Sort sort;
         switch (mode) {
@@ -45,32 +46,33 @@ public class PostsService {
         Pageable pageable = PageRequest.of(offset, limit, sort);
 
         List<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, pageable);
-        List<PostDto> postsDtoPostsDto = posts.stream().map(this::convertToDTO).collect(Collectors.toList());
-        return postsDtoPostsDto;
+        ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return listPostsDto;
     }
 
-    public List<PostDto> findAllByDate(Integer offset, Integer limit, String date){
+    public ListPostsDto findAllByDate(Integer offset, Integer limit, String date){
         Pageable paging = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllPostsByDate((byte) 1, ModerationStatus.ACCEPTED.toString(), date, paging);
-        List<PostDto> postsDtoPostsDto = posts.stream().map(this::convertToDTO).collect(Collectors.toList());
+        ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
 
-        return postsDtoPostsDto;
+        return listPostsDto;
     }
 
-    public List<PostDto> findAllByTag(Integer offset, Integer limit, String tag){
+    public ListPostsDto findAllByTag(Integer offset, Integer limit, String tag){
         Pageable paging = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllPostsByTag((byte) 1, ModerationStatus.ACCEPTED.toString(), tag, paging);
-        List<PostDto> postsDtoPostsDto = posts.stream().map(this::convertToDTO).collect(Collectors.toList());
+        ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
 
-        return postsDtoPostsDto;
+        return listPostsDto;
     }
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
-        postDto.setLikesCount((long) post.getLikesUsers().size());
-        postDto.setDislikesCount((long) post.getDisLikesUsers().size());
+        postDto.setLikesCount(post.getLikesUsers().size());
+        postDto.setDislikesCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
         postDto.setCommentCounts(post.getComments().size());
+        post.getSetTags().forEach(tag -> System.out.println(tag));
         return postDto;
     }
 }

@@ -1,7 +1,6 @@
 package main.controllers;
 
 import main.DTOEntity.ListPostsDto;
-import main.DTOEntity.PostDto;
 import main.services.PostsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +8,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 
 @RestController
@@ -26,8 +23,8 @@ public class ApiPostController
                                                  @RequestParam("limit") int limit,
                                                  @RequestParam("mode") String mode)
     {
-        List<PostDto> postsDtoPostsDto = postsService.findAllAndSort(offset, limit, mode);
-        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
+        ListPostsDto listPostsDto = postsService.findAllAndSort(offset, limit, mode);
+        return ResponseEntity.ok(listPostsDto);
     }
 
     @GetMapping(value = "/byDate", params = {"offset", "limit", "date"})
@@ -35,8 +32,8 @@ public class ApiPostController
                                                        @RequestParam("limit") int limit,
                                                        @RequestParam("date") String date)
     {
-        List<PostDto> postsDtoPostsDto = postsService.findAllByDate(offset, limit, date);
-        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
+        ListPostsDto listPostsDto = postsService.findAllByDate(offset, limit, date);
+        return ResponseEntity.ok(listPostsDto);
     }
 
     @GetMapping(value = "/byTag", params = {"offset", "limit", "tag"})
@@ -44,10 +41,8 @@ public class ApiPostController
                                                       @RequestParam("limit") int limit,
                                                       @RequestParam("tag") String tag)
     {
-
-
-        List<PostDto> postsDtoPostsDto = postsService.findAllByTag(offset, limit, tag);
-        return ResponseEntity.ok(new ListPostsDto(postsDtoPostsDto.size(), postsDtoPostsDto));
+        ListPostsDto listPostsDto = postsService.findAllByTag(offset, limit, tag);
+        return ResponseEntity.ok(listPostsDto);
     }
 
 

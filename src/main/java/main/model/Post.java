@@ -66,8 +66,11 @@ public class Post
 
     @Setter
     @Getter
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TagToPost> setTags;
+    @ManyToMany
+    @JoinTable(name = "tag2post",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+    private List<Tag> setTags;
 
     @Setter
     @Getter
@@ -78,7 +81,7 @@ public class Post
     @Setter
     @Getter
     @Where(clause = "value = -1")
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  //example
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  //example
     private List<PostVotes> disLikesUsers;
 
     @Setter
@@ -87,3 +90,8 @@ public class Post
     private List<PostComments> comments;
 
 }
+
+    /*@Setter
+    @Getter
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TagToPost> setTags;*/

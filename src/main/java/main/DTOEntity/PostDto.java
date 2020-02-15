@@ -25,9 +25,9 @@ public class PostDto {
 
     private String announce;
 
-    private Long likesCount;
+    private Integer likesCount;
 
-    private Long dislikesCount;
+    private Integer dislikesCount;
 
     private Integer commentCounts;
 
