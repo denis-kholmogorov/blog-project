@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
-import java.sql.Date;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
@@ -70,7 +69,7 @@ public class Post
     @JoinTable(name = "tag2post",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private List<Tag> setTags;
+    private Set<Tag> setTags;
 
     @Setter
     @Getter

@@ -1,13 +1,12 @@
 package main.controllers;
 
 import main.DTOEntity.ListPostsDto;
-import main.services.PostsService;
+import main.DTOEntity.PostDtoId;
+
+import main.services.PostsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -16,14 +15,14 @@ public class ApiPostController
 {
 
     @Autowired
-    PostsService postsService;
+    PostsServiceImpl postsServiceImpl;
 
     @GetMapping(params = {"offset", "limit", "mode"})
     public ResponseEntity<ListPostsDto> listPost(@RequestParam("offset") int offset,
                                                  @RequestParam("limit") int limit,
                                                  @RequestParam("mode") String mode)
     {
-        ListPostsDto listPostsDto = postsService.findAllAndSort(offset, limit, mode);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllAndSort(offset, limit, mode);
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -32,7 +31,7 @@ public class ApiPostController
                                                        @RequestParam("limit") int limit,
                                                        @RequestParam("date") String date)
     {
-        ListPostsDto listPostsDto = postsService.findAllByDate(offset, limit, date);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllByDate(offset, limit, date);
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -41,10 +40,15 @@ public class ApiPostController
                                                       @RequestParam("limit") int limit,
                                                       @RequestParam("tag") String tag)
     {
-        ListPostsDto listPostsDto = postsService.findAllByTag(offset, limit, tag);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllByTag(offset, limit, tag);
         return ResponseEntity.ok(listPostsDto);
     }
 
-
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<PostDtoId> postById(@PathVariable("id") Integer id)
+    {
+        PostDtoId post = postsServiceImpl.findPostById(id);
+        return ResponseEntity.ok(post);
+    }
 
 }

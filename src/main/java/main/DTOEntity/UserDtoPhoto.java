@@ -1,16 +1,14 @@
 package main.DTOEntity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto
-{
-    private Integer id;
+public class UserDtoPhoto extends UserDto {
 
-    private String name;
+    private String photo;
 
 }

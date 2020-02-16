@@ -2,22 +2,24 @@ package main.services;
 
 import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDto;
+import main.DTOEntity.PostDtoId;
 import main.model.ModerationStatus;
 import main.model.Post;
 import main.repositories.PostRepository;
+import main.services.PostServiceInterfaces.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class PostsService {
+public class PostsServiceImpl implements PostService {
 
     @Autowired
     PostRepository postRepository;
@@ -50,6 +52,7 @@ public class PostsService {
         return listPostsDto;
     }
 
+
     public ListPostsDto findAllByDate(Integer offset, Integer limit, String date){
         Pageable paging = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllPostsByDate((byte) 1, ModerationStatus.ACCEPTED.toString(), date, paging);
@@ -66,13 +69,23 @@ public class PostsService {
         return listPostsDto;
     }
 
+
+    public PostDtoId findPostById(Integer id) {
+        Optional<Post> post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id);
+        PostDtoId postDtoId = modelMapper.map(post.get(), PostDtoId.class);
+        postDtoId.setTags(post.get().getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
+        postDtoId.setLikesCount(post.get().getLikesUsers().size());
+        postDtoId.setDislikesCount(post.get().getDisLikesUsers().size());
+
+        return postDtoId;
+    }
+
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
         postDto.setLikesCount(post.getLikesUsers().size());
         postDto.setDislikesCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
         postDto.setCommentCounts(post.getComments().size());
-        post.getSetTags().forEach(tag -> System.out.println(tag));
         return postDto;
     }
 }
