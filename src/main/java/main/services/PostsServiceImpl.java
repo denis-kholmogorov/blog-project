@@ -45,9 +45,9 @@ public class PostsServiceImpl implements PostService {
                 break;
         }
 
-        Pageable pageable = PageRequest.of(offset, limit, sort);
+        Pageable paging = PageRequest.of(offset, limit, sort);
 
-        List<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, pageable);
+        List<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
         return listPostsDto;
     }
@@ -78,6 +78,21 @@ public class PostsServiceImpl implements PostService {
         postDtoId.setDislikesCount(post.get().getDisLikesUsers().size());
 
         return postDtoId;
+    }
+
+    @Override
+    public ListPostsDto findAllBySearch(Integer offset, Integer limit, String query) {
+        ListPostsDto listPostsDto;
+
+        if(!query.isEmpty()){
+            List<Post> posts = postRepository.findPostBySearch((byte) 1, ModerationStatus.ACCEPTED, query);
+            listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
+        }
+        else {
+            String mode = "popular";
+            listPostsDto = findAllAndSort(offset, limit, mode);
+        }
+        return listPostsDto;
     }
 
     private PostDto convertToDTO(Post post) {

@@ -12,4 +12,6 @@ public interface PostService
     ListPostsDto findAllByDate(Integer offset, Integer limit, String date);
 
     ListPostsDto findAllByTag(Integer offset, Integer limit, String tag);
+
+    ListPostsDto findAllBySearch(Integer offset, Integer limit, String query);
 }

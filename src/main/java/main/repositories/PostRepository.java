@@ -41,4 +41,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
             , nativeQuery = true)
     List<Post> findAllPostsByTag(Byte active, String ms, String tag, Pageable paging);
 
+    @Transactional(readOnly = true)
+    @Query(value = "Select p from Post p where p.isActive = :active " +
+            "AND p.moderationStatus = :ms AND p.time < curtime() AND p.text like %:query% OR p.title like %:query%")
+    List<Post> findPostBySearch(Byte active, ModerationStatus ms, String query);
 }

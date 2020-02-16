@@ -51,4 +51,12 @@ public class ApiPostController
         return ResponseEntity.ok(post);
     }
 
+    @GetMapping(value ="/search", params = {"offset", "limit", "query"})
+    public ResponseEntity<ListPostsDto> postBySearch(@RequestParam("offset") int offset,
+                                                     @RequestParam("limit") int limit,
+                                                     @RequestParam("query") String query)
+    {
+        ListPostsDto listPostsDto = postsServiceImpl.findAllBySearch(offset, limit, query);
+        return ResponseEntity.ok(listPostsDto);
+    }
 }
