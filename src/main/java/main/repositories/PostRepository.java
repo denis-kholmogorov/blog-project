@@ -1,5 +1,6 @@
 package main.repositories;
 
+import main.DTOEntity.CalendarDto;
 import main.model.ModerationStatus;
 import main.model.Post;
 import org.springframework.data.domain.Page;
@@ -9,8 +10,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.sql.Date;
+import java.util.*;
 
 @Transactional
 @Repository
@@ -45,4 +46,12 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     @Query(value = "Select p from Post p where p.isActive = :active " +
             "AND p.moderationStatus = :ms AND p.time < curtime() AND p.text like %:query% OR p.title like %:query%")
     List<Post> findPostBySearch(Byte active, ModerationStatus ms, String query);
+
+    @Transactional(readOnly = true)
+    @Query(value ="select date(p.time), count(p) from Post p where p.time < curtime() and YEAR(p.time) = :year group by p.time")
+    List<String> findCountPostForCalendar(Integer year);
+
+    @Transactional(readOnly = true)
+    @Query(value="select year(p.time) from Post p WHERE  p.time < curtime() group by year(p.time)")
+    List<Integer> findAllYearWithPosts();
 }

@@ -1,4 +1,4 @@
-package main.services;
+package main.services.PostService;
 
 import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDto;
@@ -6,7 +6,7 @@ import main.DTOEntity.PostDtoId;
 import main.model.ModerationStatus;
 import main.model.Post;
 import main.repositories.PostRepository;
-import main.services.PostServiceInterfaces.PostService;
+import main.services.PostService.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;

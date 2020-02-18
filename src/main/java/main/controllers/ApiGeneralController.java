@@ -1,31 +1,38 @@
 package main.controllers;
 
+import main.DTOEntity.CalendarDto;
 import main.DTOEntity.InitDto;
+import main.DTOEntity.TagDto;
+import main.services.ApiGeneralSevice.ApiGeneralServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
 public class ApiGeneralController
 {
+    @Autowired
+    ApiGeneralServiceImpl apiGeneralService;
+
     @GetMapping("/api/init")
+    public ResponseEntity<InitDto> init() {
 
-    ResponseEntity<InitDto> init() {
+        return ResponseEntity.ok(apiGeneralService.init());
+    }
 
-        List<String> list = null;
-        try
-        {
-            list = Files.readAllLines(Paths.get("copyright.txt"));
+    @GetMapping(value = "/api/tag", params = {"query"})
+    public ResponseEntity<List<TagDto>> tagBySearch(@RequestParam("query") String query)
+    {
+        return ResponseEntity.ok(apiGeneralService.tagBySearch(query));
+    }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return ResponseEntity.ok(new InitDto(list.get(0), list.get(1), list.get(2),
-                                             list.get(3), list.get(4), list.get(5)));
+    @GetMapping(value = "/api/calendar", params = {"year"})
+    public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year){
+        CalendarDto calendarDto = apiGeneralService.allPostByCalendar(year);
+        return ResponseEntity.ok(calendarDto);
     }
 }

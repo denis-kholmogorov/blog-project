@@ -3,7 +3,7 @@ package main.controllers;
 import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDtoId;
 
-import main.services.PostsServiceImpl;
+import main.services.PostService.PostsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
