@@ -12,7 +12,7 @@ public interface ApiGeneralService
 {
     InitDto init();
 
-    ListTagsDto getTagBySearch(String query);
+    ListTagsDto findTagsByQuery(String query);
 
     CalendarDto getAllPostByCalendar(Integer year);
 

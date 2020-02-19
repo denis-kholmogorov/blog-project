@@ -6,7 +6,6 @@ import main.DTOEntity.PostDtoId;
 import main.model.ModerationStatus;
 import main.model.Post;
 import main.repositories.PostRepository;
-import main.services.PostService.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +26,7 @@ public class PostsServiceImpl implements PostService {
     @Autowired
     ModelMapper modelMapper;
 
-    public ListPostsDto findAllAndSort(Integer offset, Integer limit, String mode)
+    public ListPostsDto findAllPostsAndSort(Integer offset, Integer limit, String mode)
     {
         Sort sort;
         switch (mode) {
@@ -53,7 +52,7 @@ public class PostsServiceImpl implements PostService {
     }
 
 
-    public ListPostsDto findAllByDate(Integer offset, Integer limit, String date){
+    public ListPostsDto findAllPostsByDate(Integer offset, Integer limit, String date){
         Pageable paging = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllPostsByDate((byte) 1, ModerationStatus.ACCEPTED.toString(), date, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
@@ -61,7 +60,7 @@ public class PostsServiceImpl implements PostService {
         return listPostsDto;
     }
 
-    public ListPostsDto findAllByTag(Integer offset, Integer limit, String tag){
+    public ListPostsDto findAllPostsByTag(Integer offset, Integer limit, String tag){
         Pageable paging = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllPostsByTag((byte) 1, ModerationStatus.ACCEPTED.toString(), tag, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
@@ -81,7 +80,7 @@ public class PostsServiceImpl implements PostService {
     }
 
     @Override
-    public ListPostsDto findAllBySearch(Integer offset, Integer limit, String query) {
+    public ListPostsDto findAllPostsBySearch(Integer offset, Integer limit, String query) {
         ListPostsDto listPostsDto;
 
         if(!query.isEmpty()){
@@ -90,7 +89,7 @@ public class PostsServiceImpl implements PostService {
         }
         else {
             String mode = "popular";
-            listPostsDto = findAllAndSort(offset, limit, mode);
+            listPostsDto = findAllPostsAndSort(offset, limit, mode);
         }
         return listPostsDto;
     }

@@ -1,11 +1,11 @@
 package main.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import lombok.Getter;
 import lombok.Setter;
+
 import javax.persistence.*;
-import java.sql.Date;
+import java.util.Calendar;
 import java.util.Set;
 
 
@@ -28,7 +28,7 @@ public class User {
     @Setter
     @Getter
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
-    private Date regTime;
+    private Calendar regTime;
 
     @Setter
     @Getter

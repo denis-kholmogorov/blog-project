@@ -30,7 +30,7 @@ public class ApiGeneralController
     @GetMapping(value = "/api/tag", params = {"query"})
     public ResponseEntity<ListTagsDto> tagBySearch(@RequestParam("query") String query)
     {
-        return ResponseEntity.ok(apiGeneralService.getTagBySearch(query));
+        return ResponseEntity.ok(apiGeneralService.findTagsByQuery(query));
     }
 
     @GetMapping(value = "/api/calendar", params = {"year"})

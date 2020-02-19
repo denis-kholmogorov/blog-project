@@ -52,7 +52,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     @Override
-    public ListTagsDto getTagBySearch(String query)
+    public ListTagsDto findTagsByQuery(String query)
     {
         query.toLowerCase();
         List<TagDto> list = tagRepository.findAllTagWithWeight((byte) 1, ModerationStatus.ACCEPTED);

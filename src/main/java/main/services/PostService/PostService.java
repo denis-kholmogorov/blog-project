@@ -5,13 +5,13 @@ import main.DTOEntity.PostDtoId;
 
 public interface PostService
 {
-    ListPostsDto findAllAndSort(Integer offset, Integer limit, String mode);
+    ListPostsDto findAllPostsAndSort(Integer offset, Integer limit, String mode);
 
     PostDtoId findPostById(Integer id);
 
-    ListPostsDto findAllByDate(Integer offset, Integer limit, String date);
+    ListPostsDto findAllPostsByDate(Integer offset, Integer limit, String date);
 
-    ListPostsDto findAllByTag(Integer offset, Integer limit, String tag);
+    ListPostsDto findAllPostsByTag(Integer offset, Integer limit, String tag);
 
-    ListPostsDto findAllBySearch(Integer offset, Integer limit, String query);
+    ListPostsDto findAllPostsBySearch(Integer offset, Integer limit, String query);
 }

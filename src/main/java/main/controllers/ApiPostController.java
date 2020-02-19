@@ -22,7 +22,7 @@ public class ApiPostController
                                                  @RequestParam("limit") int limit,
                                                  @RequestParam("mode") String mode)
     {
-        ListPostsDto listPostsDto = postsServiceImpl.findAllAndSort(offset, limit, mode);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllPostsAndSort(offset, limit, mode);
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -31,7 +31,7 @@ public class ApiPostController
                                                        @RequestParam("limit") int limit,
                                                        @RequestParam("date") String date)
     {
-        ListPostsDto listPostsDto = postsServiceImpl.findAllByDate(offset, limit, date);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllPostsByDate(offset, limit, date);
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -40,7 +40,7 @@ public class ApiPostController
                                                       @RequestParam("limit") int limit,
                                                       @RequestParam("tag") String tag)
     {
-        ListPostsDto listPostsDto = postsServiceImpl.findAllByTag(offset, limit, tag);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllPostsByTag(offset, limit, tag);
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -56,7 +56,7 @@ public class ApiPostController
                                                      @RequestParam("limit") int limit,
                                                      @RequestParam("query") String query)
     {
-        ListPostsDto listPostsDto = postsServiceImpl.findAllBySearch(offset, limit, query);
+        ListPostsDto listPostsDto = postsServiceImpl.findAllPostsBySearch(offset, limit, query);
         return ResponseEntity.ok(listPostsDto);
     }
 }

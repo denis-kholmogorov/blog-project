@@ -3,6 +3,7 @@ package main.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Calendar;
 import java.util.Date;
 
 @Data
@@ -30,5 +31,5 @@ public class PostComments
     private User user;
 
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Date time;
+    private Calendar time;
 }
