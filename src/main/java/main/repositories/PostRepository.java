@@ -54,4 +54,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     @Transactional(readOnly = true)
     @Query(value="select year(p.time) from Post p WHERE  p.time < curtime() group by year(p.time)")
     List<Integer> findAllYearWithPosts();
+
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT p FROM Post p")
+    List<Post> findAllStatistics();
 }

@@ -1,9 +1,9 @@
 package main.services.ApiGeneralSevice;
 
-import main.DTOEntity.CalendarDto;
-import main.DTOEntity.InitDto;
-import main.DTOEntity.TagDto;
+import main.DTOEntity.*;
+import main.model.GlobalSettings;
 import main.model.ModerationStatus;
+import main.repositories.GlobalSettingsRepository;
 import main.repositories.PostRepository;
 import main.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +16,24 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ApiGeneralServiceImpl implements ApiGeneralService
 {
-    @Autowired
+
     TagRepository tagRepository;
 
-    @Autowired
     PostRepository postRepository;
+
+    GlobalSettingsRepository globalSettingsRepository;
+
+    @Autowired
+    public ApiGeneralServiceImpl(TagRepository tagRepository, PostRepository postRepository, GlobalSettingsRepository globalSettingsRepository) {
+        this.tagRepository = tagRepository;
+        this.postRepository = postRepository;
+        this.globalSettingsRepository = globalSettingsRepository;
+    }
 
     @Override
     public InitDto init()
@@ -43,34 +52,31 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     @Override
-    public List<TagDto> tagBySearch(String query)
+    public ListTagsDto getTagBySearch(String query)
     {
-        List<TagDto> listTags;
+        query.toLowerCase();
+        List<TagDto> list = tagRepository.findAllTagWithWeight((byte) 1, ModerationStatus.ACCEPTED);
+        double maxWeight = list.get(0).getWeight();
+        list.forEach(tagDto -> tagDto.setWeight(tagDto.getWeight()/maxWeight));
         if(!query.isEmpty())
         {
-            listTags = tagRepository.findAllTagWithWeightByQuery((byte) 1, ModerationStatus.ACCEPTED,query);
+            list = list.stream().filter(t-> t.getName().toLowerCase().contains(query)).collect(Collectors.toList());
         }
-        else {
-            listTags = tagRepository.findAllTagWithWeight((byte) 1, ModerationStatus.ACCEPTED);
-        }
-        return listTags;
+        return new ListTagsDto(list);
     }
 
-    public CalendarDto allPostByCalendar(Integer year)
+    @Override
+    public CalendarDto getAllPostByCalendar(Integer year)
     {
         List<String> listDateAndCount;
         Map<String, Integer> map = new HashMap<>();
         List<Integer> allYearsWithPosts = postRepository.findAllYearWithPosts();
         CalendarDto calendarDto = new CalendarDto();
 
-        if(year != null)
-        {
-            listDateAndCount = postRepository.findCountPostForCalendar(year);
-        }
-        else{
+        if (year == null) {
             year = Calendar.getInstance().get(Calendar.YEAR);
-            listDateAndCount = postRepository.findCountPostForCalendar(year);
         }
+        listDateAndCount = postRepository.findCountPostForCalendar(year);
         listDateAndCount.forEach(s->{
             int a = s.indexOf(',');
             map.put(s.substring(0,a),(Integer.valueOf(s.substring(a+1))));
@@ -79,5 +85,16 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         calendarDto.setYears(allYearsWithPosts);
 
         return calendarDto;
+    }
+
+    @Override
+    public AllStatisticsBlogDto getAllStatistics()
+    {
+        return new AllStatisticsBlogDto(postRepository.findAllStatistics());
+    }
+
+    @Override
+    public List<GlobalSettings> getGlobalSettings() {
+        return globalSettingsRepository.findAllSettings();
     }
 }
