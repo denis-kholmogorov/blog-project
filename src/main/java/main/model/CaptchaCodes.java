@@ -1,8 +1,10 @@
 package main.model;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.persistence.*;
-import java.util.Date;
+import java.util.Calendar;
 
 @Data
 @Entity
@@ -14,8 +16,9 @@ public class CaptchaCodes
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Date time;
+    @CreationTimestamp
+    @Column(name = "time", nullable = false, columnDefinition = "datetime") //?
+    private Calendar time;
 
     @Column(name = "code", nullable = false, columnDefinition = "tinytext")
     private String code;

@@ -1,4 +1,4 @@
-package main.services.ApiGeneralSevice;
+package main.services.apiGeneralSevice;
 
 import main.DTOEntity.*;
 import main.model.GlobalSettings;
@@ -8,14 +8,16 @@ import main.repositories.PostRepository;
 import main.repositories.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,5 +98,44 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     @Override
     public List<GlobalSettings> getGlobalSettings() {
         return globalSettingsRepository.findAllSettings();
+    }
+
+    public String loadFile(MultipartFile image){
+
+        if(!image.isEmpty()){
+            int leftLimit = 48;
+            int rightLimit = 122;
+            int targetStringLength = 12;
+            Random random = new Random();
+
+            new StringBuilder();
+            StringBuilder generatedString =random.ints(leftLimit, rightLimit + 1)
+                    .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                    .limit(targetStringLength)
+                    .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append);
+
+            for (int i = 0; i < 10; i = i + 3){
+                generatedString.insert(i,"/");
+            }
+
+            generatedString.insert(0,"upload");
+            String dirs = generatedString.substring(0, generatedString.lastIndexOf("/"));
+            String imageName = generatedString.substring(generatedString.lastIndexOf("/"));
+            File file = new File(dirs);
+            file.mkdirs();
+            String pathImage = file + imageName + ".jpeg";
+
+            try {
+                byte[] bytes = image.getBytes();
+                ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                BufferedImage bi = ImageIO.read(bais);
+                ImageIO.write(bi, "jpeg",new File(pathImage));
+                return pathImage;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return null;
     }
 }

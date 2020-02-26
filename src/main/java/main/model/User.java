@@ -3,8 +3,11 @@ package main.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
 import java.util.Calendar;
 import java.util.Set;
 
@@ -27,6 +30,7 @@ public class User {
 
     @Setter
     @Getter
+    @CreationTimestamp
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
     private Calendar regTime;
 
@@ -37,6 +41,7 @@ public class User {
 
     @Setter
     @Getter
+    @Size(min = 6, message = "password less 6 character")
     @Column(name = "password", nullable = false)
     private String password;
 

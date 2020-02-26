@@ -1,4 +1,4 @@
-package main.services.PostService;
+package main.services.postService;
 
 import main.DTOEntity.ListPostsDto;
 import main.DTOEntity.PostDtoId;
