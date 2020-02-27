@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -37,11 +38,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
         http
                 .httpBasic().disable()
                 .csrf().disable()
-                .sessionManagement().and()
-                .antMatcher("/api/calendar/").authorizeRequests().anyRequest().authenticated()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
-                .antMatcher("/api/**").authorizeRequests().anyRequest().permitAll()
-                .and()
-                .apply(new ConfigurationFilter(providerToken));
+                .antMatcher("/**").authorizeRequests().anyRequest().permitAll();
+                /*.and()
+                .apply(new ConfigurationFilter(providerToken));*/
     }
 }

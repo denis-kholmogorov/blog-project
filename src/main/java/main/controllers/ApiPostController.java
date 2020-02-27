@@ -23,6 +23,7 @@ public class ApiPostController
                                                  @RequestParam("mode") String mode)
     {
         ListPostsDto listPostsDto = postsServiceImpl.findAllPostsAndSort(offset, limit, mode);
+
         return ResponseEntity.ok(listPostsDto);
     }
 

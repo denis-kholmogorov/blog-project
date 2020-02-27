@@ -22,10 +22,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userService.findByUserEmail(email);
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        User user = userService.findById(Integer.valueOf(userId));
         if(user == null){
-            throw new UsernameNotFoundException("User not found with email " + email);
+            throw new UsernameNotFoundException("User not found with email " + user.getEmail());
         }
         UserDetailsImpl userDetails = UserDetailsFactory.create(user);
         return userDetails;

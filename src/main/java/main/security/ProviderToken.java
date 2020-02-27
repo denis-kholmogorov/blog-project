@@ -8,10 +8,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import javax.management.relation.Role;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -21,42 +19,55 @@ public class ProviderToken {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    private final Map<String, String> tokens = new HashMap<>();
+    public Map<String, Integer> getTokens() {
+        return tokens;
+    }
 
-    public String createToken(String email, HttpServletRequest req){
-        String idSession = req.getSession().getId();
-        tokens.put(idSession, email);
-        return idSession;
+    private final Map<String, Integer> tokens = new HashMap<>();
+
+    public String createToken(String sessionId, Integer userId){
+
+        tokens.put(sessionId, userId);
+        return sessionId;
     }
 
     public String resolveToken(HttpServletRequest req){
-        String bearerToken = req.getHeader("Authorization");
-        log.info("token name " + bearerToken);
-        if(bearerToken != null && bearerToken.startsWith("Bearer ")){
-            return bearerToken.substring(7);
+
+        String sessionId = req.getSession().getId();
+        log.info("session id " + sessionId);
+        if(sessionId != null){
+            return sessionId;
         }
         return null;
     }
 
     public Authentication getAuthentification(String token){
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getEmail(token));
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUserBySession(token).toString());
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public String getEmail(String token){
-        String email = tokens.get(token);
-        return email;
+    public Integer getUserBySession(String sessionId){
+        if (tokens.containsKey(sessionId)) {
+            return tokens.get(sessionId);
+        }
+        return null;
     }
 
-    public boolean validateToken(String token){
+    public boolean validateToken(String sessionId){
         try{
-            if(tokens.containsKey(token)){
+            if(tokens.containsValue(sessionId)){
                 return true;
             }
             return false;
         }catch (UserAuthenticationException e){
             throw new UserAuthenticationException("Token is invalid");
         }
+    }
+
+    public boolean deleteToken(String sessionId){
+        Integer userId = tokens.remove(sessionId);
+        log.info("user {} was logout ", userId);
+        return true;
     }
 
 

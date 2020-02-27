@@ -1,5 +1,6 @@
 package main.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.AllStatisticsBlogDto;
 import main.DTOEntity.CalendarDto;
 import main.DTOEntity.InitDto;
@@ -12,8 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpSession;
 import java.util.List;
 
+@Slf4j
 @RestController
 public class ApiGeneralController
 {
@@ -26,14 +29,16 @@ public class ApiGeneralController
         return ResponseEntity.ok(apiGeneralService.init());
     }
 
-    @GetMapping(value = "/api/tag", params = {"query"})
-    public ResponseEntity<ListTagsDto> tagBySearch(@RequestParam("query") String query)
+    @GetMapping(value = "/api/tag")
+    public ResponseEntity<ListTagsDto> tagBySearch()//@RequestParam("query") String query
     {
+        String query = "";
         return ResponseEntity.ok(apiGeneralService.findTagsByQuery(query));
     }
 
     @GetMapping(value = "/api/calendar", params = {"year"})
-    public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year){
+    public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year, HttpSession session){
+        log.info("id session " + session.getId());
         CalendarDto calendarDto = apiGeneralService.getAllPostByCalendar(year);
         return ResponseEntity.ok(calendarDto);
     }

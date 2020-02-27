@@ -8,11 +8,11 @@ import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccessAnswerDto {
+public class AnswerDto {
 
     @Setter
     @Getter
-    boolean result = true;
+    boolean result;
 
 
 

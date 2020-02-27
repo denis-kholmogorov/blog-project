@@ -16,6 +16,7 @@ public final class UserDetailsFactory
                user.getIsModerator(),
                user.getCode(),
                user.getRegTime()
+
        );
 
 

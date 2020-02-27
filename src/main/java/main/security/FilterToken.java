@@ -1,7 +1,6 @@
 package main.security;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
@@ -21,12 +20,12 @@ public class FilterToken extends GenericFilterBean {
     public FilterToken(ProviderToken providerToken){
         this.providerToken = providerToken;
     }
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         String token = providerToken.resolveToken((HttpServletRequest) servletRequest);
         if (token!=null && providerToken.validateToken(token)){
             Authentication authentication = providerToken.getAuthentification(token);
-
             if(authentication != null){
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
