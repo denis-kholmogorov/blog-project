@@ -1,17 +1,15 @@
 package main.repositories;
 
-import main.DTOEntity.CalendarDto;
 import main.model.ModerationStatus;
 import main.model.Post;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Date;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Transactional
 @Repository
@@ -48,7 +46,8 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     List<Post> findPostBySearch(Byte active, ModerationStatus ms, String query);
 
     @Transactional(readOnly = true)
-    @Query(value ="select date(p.time), count(p) from Post p where p.time < curtime() and YEAR(p.time) = :year group by p.time")
+    @Query(value ="select date(p.time), count(p) from Post p where p.time < curtime() and" +
+            " YEAR(p.time) = :year group by p.time")
     List<String> findCountPostForCalendar(Integer year);
 
     @Transactional(readOnly = true)
@@ -58,4 +57,17 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     @Transactional(readOnly = true)
     @Query(value = "SELECT p FROM Post p")
     List<Post> findAllStatistics();
+
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT p FROM Post p where p.user.id = :id")
+    List<Post> findAllStatisticsById(Integer id);
+
+    @Transactional(readOnly = true)
+    @Query(value = "Select * from posts where user_id = :userId and is_active = :query", nativeQuery = true)
+    List<Post> findMyPosts(Integer userId, String query, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT * FROM posts where is_active = 1 and moderator_id = :userId and moderation_status = :query",
+    nativeQuery = true)
+    List<Post> findMyModerationPosts(Integer userId, String query, Pageable pageable);
 }

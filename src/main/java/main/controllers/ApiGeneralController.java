@@ -1,11 +1,12 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.DTOEntity.AllStatisticsBlogDto;
 import main.DTOEntity.CalendarDto;
 import main.DTOEntity.InitDto;
 import main.DTOEntity.ListTagsDto;
+import main.DTOEntity.StatisticsBlogDto;
 import main.model.GlobalSettings;
+import main.security.ProviderToken;
 import main.services.apiGeneralSevice.ApiGeneralServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,50 +15,67 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
-import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
+@RequestMapping("/api")
 @RestController
 public class ApiGeneralController
 {
     @Autowired
     ApiGeneralServiceImpl apiGeneralService;
 
-    @GetMapping("/api/init")
+    @Autowired
+    ProviderToken providerToken;
+    
+
+    @GetMapping("/init")
     public ResponseEntity<InitDto> init() {
 
         return ResponseEntity.ok(apiGeneralService.init());
     }
 
-    @GetMapping(value = "/api/tag")
+    @GetMapping(value = "/tag")
     public ResponseEntity<ListTagsDto> tagBySearch()//@RequestParam("query") String query
     {
         String query = "";
         return ResponseEntity.ok(apiGeneralService.findTagsByQuery(query));
     }
 
-    @GetMapping(value = "/api/calendar", params = {"year"})
+    @GetMapping(value = "/calendar", params = {"year"})
     public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year, HttpSession session){
         log.info("id session " + session.getId());
         CalendarDto calendarDto = apiGeneralService.getAllPostByCalendar(year);
         return ResponseEntity.ok(calendarDto);
     }
 
-    @GetMapping(value = "/api/statistics/all")
-    public ResponseEntity allStatisticsBlog(){
+    @GetMapping(value = "/statistics/all")
+    public ResponseEntity getAllStatistics(HttpSession httpSession){
 
-        List<GlobalSettings> settings = apiGeneralService.getGlobalSettings();
+        Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
+        log.info(settings.get().isValue() + " значени настройки показа статистики");
+        if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
 
-        if(settings.get(2).getValue().equals("1")) {
-            AllStatisticsBlogDto allStat = apiGeneralService.getAllStatistics();
-            return ResponseEntity.ok(allStat);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            StatisticsBlogDto allStat = apiGeneralService.getAllStatistics();
+            log.info("Показываем общую статистику");
+            return ResponseEntity.ok(allStat);
         }
     }
 
-    @PostMapping(value = "api/image")
+    @GetMapping(value = "/statistics/my")
+    public ResponseEntity getMyStatistics(HttpSession httpSession){         /*/*/
+        StatisticsBlogDto gs = apiGeneralService.getMyStatistics(httpSession.getId());
+        if(gs!=null){
+            return ResponseEntity.ok(gs);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+
+    @PostMapping(value = "/image")
     public ResponseEntity uploadImage(@RequestParam("image") MultipartFile image)
     {
         String answer = apiGeneralService.loadFile(image);
@@ -65,7 +83,38 @@ public class ApiGeneralController
             return ResponseEntity.ok(answer);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    }
 
+    @GetMapping(value = "/settings")
+    public ResponseEntity getGlobalSettings(HttpSession httpSession)
+    {
+        log.info("Зашли в настройки get_mapping");
+        Map<String, Boolean> settings = apiGeneralService.getSettings(httpSession.getId());
+        return ResponseEntity.ok(settings);
+    }
+
+    @PutMapping(value = "/settings")
+    public ResponseEntity setGlobalSettings(@RequestBody Map<String, Boolean> settings, HttpSession httpSession)
+    {
+
+        log.info("Получение putmapping глобальных настроек - " + settings.size()+ " ");
+
+        for(Object a: settings.keySet()){
+            System.out.println(a + " " + settings.get(a));
+        }
+        apiGeneralService.setSettings(settings, httpSession.getId());
+        return ResponseEntity.ok().body(null);
+    }
+
+    @PostMapping(value = "profile/my")  // не работает
+    public ResponseEntity setMyProfile(@RequestBody MultipartFile file,
+                                                    Integer removeImage,
+                                                    String name,
+                                                    String email,
+                                                    String password)
+    {
+        System.out.println(file + " " + name + " " + email);
+        return null;
     }
 }
 

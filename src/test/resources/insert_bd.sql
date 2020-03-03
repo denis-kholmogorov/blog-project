@@ -14,6 +14,7 @@ VALUES
 ('2','1','ACCEPTED','1','post of user','2020-01-22 22:23:01','post of user','20','2'),
 ('3','1','ACCEPTED','1','post of user2','2020-03-23 22:23:01','post of user2','30','3');
 
+
 --INSERT post_votes
 INSERT INTO `blog_site`.`post_votes`
 (`id`,`time`,`value`,`post_id`,`user_id`)

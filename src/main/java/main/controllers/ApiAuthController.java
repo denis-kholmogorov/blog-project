@@ -5,6 +5,7 @@ import main.DTOEntity.*;
 import main.services.captchaService.CaptchaServiceImpl;
 import main.services.userService.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -59,11 +60,14 @@ public class ApiAuthController
     public ResponseEntity check(HttpSession httpSession){
         String session = httpSession.getId();
         log.info("Name session" + session);
-            AnswerLoginDto answer = userService.findBySession(session);
+        AnswerLoginDto answer = userService.findBySession(session);
+
             if (answer == null)
             {
                 return ResponseEntity.ok(new AnswerDto(false));
             }
+
+        log.info("Пользователь зарегистрирован");
         return ResponseEntity.ok(answer);
     }
 
@@ -71,5 +75,7 @@ public class ApiAuthController
     public ResponseEntity logout(HttpSession session){
         return ResponseEntity.ok(userService.logoutUser(session.getId()));
     }
+
+
 
 }

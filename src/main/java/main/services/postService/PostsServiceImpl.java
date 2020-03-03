@@ -1,11 +1,11 @@
 package main.services.postService;
 
-import main.DTOEntity.ListPostsDto;
-import main.DTOEntity.PostDto;
-import main.DTOEntity.PostDtoId;
+import lombok.extern.slf4j.Slf4j;
+import main.DTOEntity.*;
 import main.model.ModerationStatus;
 import main.model.Post;
 import main.repositories.PostRepository;
+import main.security.ProviderToken;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -17,14 +17,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class PostsServiceImpl implements PostService {
 
-    @Autowired
     PostRepository postRepository;
 
-    @Autowired
     ModelMapper modelMapper;
+
+    ProviderToken providerToken;
+
+    @Autowired
+    public PostsServiceImpl(PostRepository postRepository, ModelMapper modelMapper, ProviderToken providerToken) {
+        this.postRepository = postRepository;
+        this.modelMapper = modelMapper;
+        this.providerToken = providerToken;
+    }
+
+
 
     public ListPostsDto findAllPostsAndSort(Integer offset, Integer limit, String mode)
     {
@@ -93,6 +103,57 @@ public class PostsServiceImpl implements PostService {
         }
         return listPostsDto;
     }
+
+    public ListPostsDto getMyPosts(int offset, int limit, String status, String sessionId){
+
+        if(providerToken.validateToken(sessionId)){
+
+            int userId = providerToken.getUserIdBySession(sessionId);
+            Pageable paging = PageRequest.of(offset, limit);
+            String query = null;
+
+            switch (status) {
+                case "inactive":
+                    query = "0";
+                    break;
+                case "pending":
+                    query = "1 and moderationStatus = NEW";
+                    break;
+                case "declined":
+                    query = "1 and moderationStatus = DECLINED";
+                    break;
+                case "published":
+                    query = "1 and moderationStatus = ACCEPTED";
+                    break;
+            }
+
+            log.info("запрос пользователя к своим записям под id " + userId);
+            List<MyPostDto> myPosts = postRepository.findMyPosts(userId, query, paging)
+                    .stream()
+                    .map(p->new MyPostDto(p))
+                    .collect(Collectors.toList());
+            log.info("количество записей " + userId + " равно " + myPosts.size());
+
+            return new ListPostsDto(myPosts);
+        }
+        return null;
+    }
+
+    public ListPostsDto getMyModerationPosts(int offset, int limit, String status, String sessionId){
+
+        if(providerToken.validateToken(sessionId)) {
+            int userId = providerToken.getUserIdBySession(sessionId);
+            Pageable paging = PageRequest.of(offset, limit);
+            List<PostModerationDto> posts = postRepository.findMyModerationPosts(userId, status, paging)
+                    .stream()
+                    .map(p -> new PostModerationDto(p))
+                    .collect(Collectors.toList());
+
+            return new ListPostsDto(posts);
+        }
+        return null;
+    }
+
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);

@@ -1,6 +1,7 @@
 package main.DTOEntity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import main.model.Post;
 
@@ -8,26 +9,28 @@ import java.util.Calendar;
 import java.util.List;
 
 @Data
-public class AllStatisticsBlogDto
+public class StatisticsBlogDto
 {
-    Integer posts = 0;
 
-    Integer likes = 0;
+    Integer postsCount = 0;
 
-    Integer dislikes = 0;
+    Integer likesCount = 0;
 
-    Integer views = 0;
+    Integer dislikesCount = 0;
 
+    Integer viewsCount = 0;
+
+    //@JsonProperty(value = "Первая публикация")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
     Calendar firstPublication = null;
 
-    public AllStatisticsBlogDto(List<Post> posts)
+    public StatisticsBlogDto(List<Post> posts)
     {
         posts.forEach(post -> {
-            this.posts++;
-            this.likes = this.likes + post.getLikesUsers().size();
-            this.dislikes = this.getDislikes() + post.getDisLikesUsers().size();
-            this.views = this.views + post.getViewCount();
+            this.postsCount++;
+            this.likesCount = this.likesCount + post.getLikesUsers().size();
+            this.dislikesCount = this.getDislikesCount() + post.getDisLikesUsers().size();
+            this.viewsCount = this.viewsCount + post.getViewCount();
 
             if(this.firstPublication == null)
             {

@@ -5,20 +5,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import main.DTOEntity.PostDtoInterface.PostDtoInterface;
+import main.model.Post;
 
 import java.util.Calendar;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class PostDto implements PostDtoInterface {
+public class MyPostDto implements PostDtoInterface {
 
     private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
     private Calendar time;
-
-    private UserDto user;
 
     private String title;
 
@@ -32,5 +30,14 @@ public class PostDto implements PostDtoInterface {
 
     private Integer viewCount;
 
-
+    public MyPostDto(Post post) {
+        this.id = post.getId();
+        this.time = post.getTime();
+        this.title = post.getTitle();
+        this.announce = post.getText();
+        this.likesCount = post.getLikesUsers().size();
+        this.dislikesCount = post.getDisLikesUsers().size();
+        this.commentCounts = post.getComments().size();
+        this.viewCount = post.getViewCount();
+    }
 }

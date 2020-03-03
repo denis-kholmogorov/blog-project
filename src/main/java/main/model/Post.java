@@ -29,7 +29,7 @@ public class Post
     @Setter
     @Getter
     @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINE') default 'NEW'")
+    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED') default 'NEW'")
     private ModerationStatus moderationStatus;
 
     @Setter

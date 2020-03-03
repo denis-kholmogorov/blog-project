@@ -90,20 +90,20 @@ public class UserServiceImpl implements UserService
             if(passwordEncoder.matches(password, userPassword) && !providerToken.validateToken(session.getId()))
             {
                 providerToken.createToken(session.getId(), user.getId());
-                log.info("User with email " + user.getEmail() + " authorisation");
+                log.info("User with email " + user.getEmail() + " has been authorization");
                 Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
                 UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
                                                        user.getIsModerator(), moderationCount);
                 return new AnswerLoginDto(answer);
             }
-            log.info("User with email " + user.getEmail() + " IS NOT authorisation");
+            log.info("User with email " + user.getEmail() + " IS NOT authorization");
         }
         return null;
     }
 
     @Override
     public  AnswerLoginDto findBySession(String sessionId){
-        Integer userId = providerToken.getUserBySession(sessionId);
+        Integer userId = providerToken.getUserIdBySession(sessionId);
         if(userId != null){
             Optional<User> userOptional = userRepository.findById(userId);
             if(userOptional.isPresent()){
@@ -121,6 +121,7 @@ public class UserServiceImpl implements UserService
     @Override
     public AnswerDto logoutUser(String sessionId) {
         providerToken.deleteToken(sessionId);
+        log.info("Удален юзер " + sessionId);
         return new AnswerDto(true);
     }
 

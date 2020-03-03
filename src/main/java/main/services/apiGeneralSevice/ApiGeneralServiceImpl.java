@@ -1,11 +1,14 @@
 package main.services.apiGeneralSevice;
 
+import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
 import main.model.GlobalSettings;
 import main.model.ModerationStatus;
 import main.repositories.GlobalSettingsRepository;
 import main.repositories.PostRepository;
 import main.repositories.TagRepository;
+import main.repositories.UserRepository;
+import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ApiGeneralServiceImpl implements ApiGeneralService
 {
@@ -30,11 +34,21 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     GlobalSettingsRepository globalSettingsRepository;
 
+    ProviderToken providerToken;
+
+    UserRepository userRepository;
+
     @Autowired
-    public ApiGeneralServiceImpl(TagRepository tagRepository, PostRepository postRepository, GlobalSettingsRepository globalSettingsRepository) {
+    public ApiGeneralServiceImpl(TagRepository tagRepository,
+                                 PostRepository postRepository,
+                                 GlobalSettingsRepository globalSettingsRepository,
+                                 ProviderToken providerToken,
+                                 UserRepository userRepository) {
         this.tagRepository = tagRepository;
         this.postRepository = postRepository;
         this.globalSettingsRepository = globalSettingsRepository;
+        this.providerToken = providerToken;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -90,15 +104,13 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     @Override
-    public AllStatisticsBlogDto getAllStatistics()
+    public StatisticsBlogDto getAllStatistics()
     {
-        return new AllStatisticsBlogDto(postRepository.findAllStatistics());
+        return new StatisticsBlogDto(postRepository.findAllStatistics());
     }
 
-    @Override
-    public List<GlobalSettings> getGlobalSettings() {
-        return globalSettingsRepository.findAllSettings();
-    }
+
+    public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findById(3);}
 
     public String loadFile(MultipartFile image){
 
@@ -135,7 +147,54 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 e.printStackTrace();
             }
         }
+        return null;
+    }
 
+    public Map<String, Boolean> getSettings(String sessionId){
+        log.info("Работаем внутри getsettings");
+        if(providerToken.validateToken(sessionId) &&
+                userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
+        {
+
+            Map<String, Boolean> settings = globalSettingsRepository.findOnlyCodeAndValue();
+            log.info("Получил настройки " + settings.size());
+            return settings;
+        }
+        log.info("не отработал get_settings");
+        return null;
+    }
+
+    public boolean setSettings(Map<String, Boolean> settings, String sessionId){
+        log.info((userRepository.findById(providerToken.getUserIdBySession(sessionId))
+                .get()
+                .getIsModerator() == (byte)1) + " найден модератор");
+        log.info(providerToken.validateToken(sessionId) + " прошел валидацию");
+
+        if(providerToken.validateToken(sessionId) &&
+                userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
+        {
+            List<GlobalSettings> listSettingsFromBD = globalSettingsRepository.findAllSettings();
+            log.info(listSettingsFromBD.size() + " size list settings");
+            for(String code: settings.keySet()){
+                log.info(code + " номер кода");
+                listSettingsFromBD.forEach(gs->{
+                    if(code.equals(gs.getCode())){
+                        log.info("Changed value setting " + code);
+                        gs.setValue(settings.get(code));
+                    }
+                });
+            }
+            globalSettingsRepository.saveAll(listSettingsFromBD);
+            return true;
+        }
+        return false;
+    }
+    
+    public StatisticsBlogDto getMyStatistics (String sessionId){
+        if(providerToken.validateToken(sessionId)){
+            Integer userId = providerToken.getUserIdBySession(sessionId);
+           return new StatisticsBlogDto(postRepository.findAllStatisticsById(userId));
+        }
         return null;
     }
 }

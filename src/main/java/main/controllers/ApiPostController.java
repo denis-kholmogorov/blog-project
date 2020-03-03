@@ -1,12 +1,16 @@
 package main.controllers;
 
 import main.DTOEntity.ListPostsDto;
+import main.DTOEntity.MyPostDto;
 import main.DTOEntity.PostDtoId;
 
 import main.services.postService.PostsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpSession;
 
 
 @RestController
@@ -53,11 +57,32 @@ public class ApiPostController
     }
 
     @GetMapping(value ="/search", params = {"offset", "limit", "query"})
-    public ResponseEntity<ListPostsDto> postBySearch(@RequestParam("offset") int offset,
-                                                     @RequestParam("limit") int limit,
-                                                     @RequestParam("query") String query)
+    public ResponseEntity<ListPostsDto> getPostsBySearch(@RequestParam("offset") int offset,
+                                                         @RequestParam("limit") int limit,
+                                                         @RequestParam("query") String query)
     {
         ListPostsDto listPostsDto = postsServiceImpl.findAllPostsBySearch(offset, limit, query);
         return ResponseEntity.ok(listPostsDto);
+    }
+
+    @GetMapping(value = "/my", params = {"offset","limit","status"})
+    public ResponseEntity getMyPosts(@RequestParam("offset") int offset,
+                                     @RequestParam("limit") int limit,
+                                     @RequestParam("status") String status,
+                                     HttpSession httpSession){
+        ListPostsDto myPosts = postsServiceImpl.getMyPosts(offset,limit,status,httpSession.getId());
+        if(myPosts != null) return ResponseEntity.ok(myPosts);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+
+    @GetMapping(value = "/moderation", params ={"offset","limit","status"})
+    public ResponseEntity getMyModerationPosts(@RequestParam("offset") int offset,
+                                               @RequestParam("limit") int limit,
+                                               @RequestParam("status") String status,
+                                               HttpSession httpSession)
+    {
+        ListPostsDto listPostsDto = postsServiceImpl.getMyModerationPosts(offset, limit, status, httpSession.getId());
+        if(listPostsDto != null) return ResponseEntity.ok(listPostsDto);
+        return null;
     }
 }

@@ -1,14 +1,8 @@
 package main.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,12 +10,6 @@ import java.util.Map;
 @Component
 public class ProviderToken {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    public Map<String, Integer> getTokens() {
-        return tokens;
-    }
 
     private final Map<String, Integer> tokens = new HashMap<>();
 
@@ -31,31 +19,16 @@ public class ProviderToken {
         return sessionId;
     }
 
-    public String resolveToken(HttpServletRequest req){
-
-        String sessionId = req.getSession().getId();
-        log.info("session id " + sessionId);
-        if(sessionId != null){
-            return sessionId;
-        }
-        return null;
-    }
-
-    public Authentication getAuthentification(String token){
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUserBySession(token).toString());
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-
-    public Integer getUserBySession(String sessionId){
+    public Integer getUserIdBySession(String sessionId){
         if (tokens.containsKey(sessionId)) {
             return tokens.get(sessionId);
         }
         return null;
     }
 
-    public boolean validateToken(String sessionId){
+   public boolean validateToken(String sessionId){
         try{
-            if(tokens.containsValue(sessionId)){
+            if(tokens.containsKey(sessionId)){
                 return true;
             }
             return false;
