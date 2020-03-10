@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import main.DTOEntity.PostDtoInterface.PostDtoInterface;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 @Data
@@ -16,7 +17,7 @@ public class PostDto implements PostDtoInterface {
     private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
-    private Calendar time;
+    private LocalDateTime time;
 
     private UserDto user;
 

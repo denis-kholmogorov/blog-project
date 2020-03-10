@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import main.model.Post;
+import org.springframework.cglib.core.internal.LoadingCache;
 
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class StatisticsBlogDto
 
     //@JsonProperty(value = "Первая публикация")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
-    Calendar firstPublication = null;
+    LocalDateTime firstPublication = null;
 
     public StatisticsBlogDto(List<Post> posts)
     {
@@ -36,7 +38,7 @@ public class StatisticsBlogDto
             {
                 this.firstPublication = post.getTime();
             }
-            if(this.firstPublication.after(post.getTime()))
+            if(this.firstPublication.isAfter(post.getTime()))
             {
                 this.firstPublication = post.getTime();
             }

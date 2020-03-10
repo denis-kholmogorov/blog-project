@@ -2,19 +2,25 @@ package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
+import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 import main.model.ModerationStatus;
 import main.model.Post;
 import main.repositories.PostRepository;
+import main.repositories.UserRepository;
 import main.security.ProviderToken;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,13 +33,15 @@ public class PostsServiceImpl implements PostService {
 
     ProviderToken providerToken;
 
+    UserRepository userRepository;
+
     @Autowired
-    public PostsServiceImpl(PostRepository postRepository, ModelMapper modelMapper, ProviderToken providerToken) {
+    public PostsServiceImpl(PostRepository postRepository, ModelMapper modelMapper, ProviderToken providerToken, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.modelMapper = modelMapper;
         this.providerToken = providerToken;
+        this.userRepository = userRepository;
     }
-
 
 
     public ListPostsDto findAllPostsAndSort(Integer offset, Integer limit, String mode)
@@ -41,40 +49,41 @@ public class PostsServiceImpl implements PostService {
         Sort sort;
         switch (mode) {
             case "best":
-                sort = Sort.by(Sort.Direction.DESC, "likesUsers.size");
+                sort = Sort.by("likesUsers.size").descending();
                 break;
             case "popular":
-                sort = Sort.by(Sort.Direction.DESC, "comments.size");
+                sort = Sort.by("comments.size").descending();
                 break;
             case "early":
-                sort = Sort.by(Sort.Direction.ASC, "time");
+                sort = Sort.by("time").ascending();
                 break;
             default:
-                sort = Sort.by(Sort.Direction.DESC, "time");
+                sort = Sort.by("time").descending();
                 break;
         }
 
-        Pageable paging = PageRequest.of(offset, limit, sort);
+        Pageable paging = PageRequest.of((offset/limit), limit, sort);
 
-        List<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, paging);
+        Page<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
+        listPostsDto.setCount((int)posts.getTotalElements());
         return listPostsDto;
     }
 
 
     public ListPostsDto findAllPostsByDate(Integer offset, Integer limit, String date){
-        Pageable paging = PageRequest.of(offset, limit);
-        List<Post> posts = postRepository.findAllPostsByDate((byte) 1, ModerationStatus.ACCEPTED.toString(), date, paging);
+        Pageable paging = PageRequest.of((offset/limit), limit);
+        Page<Post> posts = postRepository.findAllPostsByDate((byte) 1, ModerationStatus.ACCEPTED.toString(), date, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
-
+        listPostsDto.setCount((int) posts.getTotalElements());
         return listPostsDto;
     }
 
     public ListPostsDto findAllPostsByTag(Integer offset, Integer limit, String tag){
-        Pageable paging = PageRequest.of(offset, limit);
-        List<Post> posts = postRepository.findAllPostsByTag((byte) 1, ModerationStatus.ACCEPTED.toString(), tag, paging);
+        Pageable paging = PageRequest.of((offset/limit), limit);
+        Page<Post> posts = postRepository.findAllPostsByTag((byte) 1, ModerationStatus.ACCEPTED.toString(), tag, paging);
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
-
+        listPostsDto.setCount((int) posts.getTotalElements());
         return listPostsDto;
     }
 
@@ -94,12 +103,16 @@ public class PostsServiceImpl implements PostService {
         ListPostsDto listPostsDto;
 
         if(!query.isEmpty()){
-            List<Post> posts = postRepository.findPostBySearch((byte) 1, ModerationStatus.ACCEPTED, query);
+            Page<Post> posts = postRepository.findPostBySearch((byte) 1,
+                                                               ModerationStatus.ACCEPTED,
+                                                               query,
+                                                               PageRequest.of((offset/limit), limit));
             listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
+            listPostsDto.setCount((int)posts.getTotalElements());
         }
         else {
             String mode = "popular";
-            listPostsDto = findAllPostsAndSort(offset, limit, mode);
+            listPostsDto = findAllPostsAndSort((offset/limit), limit, mode);
         }
         return listPostsDto;
     }
@@ -107,9 +120,8 @@ public class PostsServiceImpl implements PostService {
     public ListPostsDto getMyPosts(int offset, int limit, String status, String sessionId){
 
         if(providerToken.validateToken(sessionId)){
-
             int userId = providerToken.getUserIdBySession(sessionId);
-            Pageable paging = PageRequest.of(offset, limit);
+            Pageable paging = PageRequest.of((offset/limit), limit);
             String query = null;
 
             switch (status) {
@@ -126,15 +138,16 @@ public class PostsServiceImpl implements PostService {
                     query = "1 and moderationStatus = ACCEPTED";
                     break;
             }
-
             log.info("запрос пользователя к своим записям под id " + userId);
-            List<MyPostDto> myPosts = postRepository.findMyPosts(userId, query, paging)
+            Page<Post> page = postRepository.findMyPosts(userId, query, paging);
+            List<MyPostDto> myPosts = page
                     .stream()
                     .map(p->new MyPostDto(p))
                     .collect(Collectors.toList());
             log.info("количество записей " + userId + " равно " + myPosts.size());
-
-            return new ListPostsDto(myPosts);
+            ListPostsDto listPostsDto = new ListPostsDto(myPosts);
+            listPostsDto.setCount((int)page.getTotalElements());
+            return listPostsDto;
         }
         return null;
     }
@@ -143,14 +156,62 @@ public class PostsServiceImpl implements PostService {
 
         if(providerToken.validateToken(sessionId)) {
             int userId = providerToken.getUserIdBySession(sessionId);
-            Pageable paging = PageRequest.of(offset, limit);
-            List<PostModerationDto> posts = postRepository.findMyModerationPosts(userId, status, paging)
-                    .stream()
-                    .map(p -> new PostModerationDto(p))
-                    .collect(Collectors.toList());
+            Pageable paging = PageRequest.of((offset/limit), limit, Sort.by("time").descending());
+            List<PostModerationDto> postsList;
+            Page<Post> posts;
+            if(status.equals("new")) {
+                posts = postRepository.findModerationNewPosts(paging);
+                postsList = posts.stream()
+                        .map(p -> new PostModerationDto(p))
+                        .collect(Collectors.toList());
+            }else{
+                posts = postRepository.findMyModerationPosts(userId, status, paging);
+                postsList = posts.stream()
+                        .map(p -> new PostModerationDto(p))
+                        .collect(Collectors.toList());
 
-            return new ListPostsDto(posts);
+            }
+            ListPostsDto listPostsDto = new ListPostsDto(postsList);
+            listPostsDto.setCount((int)posts.getTotalElements());
+            return listPostsDto;
         }
+        return null;
+    }
+
+    public AnswerDtoInterface createPost(PostRequestDto postDto, String session){
+        if(providerToken.validateToken(session)){
+            LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T"," "),
+                    DateTimeFormatter.ofPattern("yyyy-dd-MM HH:mm"));
+
+            log.info(time.toLocalTime().isAfter(LocalDateTime.now().toLocalTime())+"");
+            if(!time.toLocalTime().isAfter(LocalDateTime.now().minusMinutes(1).toLocalTime())) {
+                time = LocalDateTime.now();
+            }
+            Map<String, String> error = new HashMap<>();
+            if(postDto.getTitle().length() >= 10){
+                if(postDto.getText().length() >= 500){
+                    Integer userId = providerToken.getUserIdBySession(session);
+                    Post post = new Post();
+                    post.setUser(userRepository.findById(userId).get());
+                    post.setIsActive(postDto.getActive());
+                    post.setTime(time);
+                    post.setText(postDto.getText());
+                    post.setTitle(postDto.getTitle());
+                    post.setViewCount(0);
+                    post.setModerationStatus(ModerationStatus.NEW);
+                    Post p = postRepository.save(post);
+                    log.warn(p.getId().toString());
+                    return new AnswerDto(true);
+                }
+                else {
+                    error.put("text", "Текст публикации слишком короткий");
+                }
+            }else {
+                error.put("title", "Заголовок слишком короткий или его нет");
+            }
+            return new ErrorAnswerDto(false, error);
+        }
+
         return null;
     }
 

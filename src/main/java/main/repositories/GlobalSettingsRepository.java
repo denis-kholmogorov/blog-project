@@ -28,4 +28,6 @@ public interface GlobalSettingsRepository extends CrudRepository<GlobalSettings,
                 GlobalSettings::isValue
         ));
     }
+
+    Optional<GlobalSettings> findByCode(String code);
 }

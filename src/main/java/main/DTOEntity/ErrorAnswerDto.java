@@ -4,13 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorAnswerDto
+public class ErrorAnswerDto implements AnswerDtoInterface
 {
     @Setter
     @Getter

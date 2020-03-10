@@ -1,9 +1,11 @@
 package main.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.ListPostsDto;
-import main.DTOEntity.MyPostDto;
 import main.DTOEntity.PostDtoId;
-
+import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
+import main.DTOEntity.PostRequestDto;
+import main.security.ProviderToken;
 import main.services.postService.PostsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,15 +13,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.text.ParseException;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/post")
 public class ApiPostController
 {
+    PostsServiceImpl postsServiceImpl;
+
+    ProviderToken providerToken;
 
     @Autowired
-    PostsServiceImpl postsServiceImpl;
+    public ApiPostController(PostsServiceImpl postsServiceImpl, ProviderToken providerToken) {
+        this.postsServiceImpl = postsServiceImpl;
+        this.providerToken = providerToken;
+    }
 
     @GetMapping(params = {"offset", "limit", "mode"})
     public ResponseEntity<ListPostsDto> listPost(@RequestParam("offset") int offset,
@@ -27,7 +36,6 @@ public class ApiPostController
                                                  @RequestParam("mode") String mode)
     {
         ListPostsDto listPostsDto = postsServiceImpl.findAllPostsAndSort(offset, limit, mode);
-
         return ResponseEntity.ok(listPostsDto);
     }
 
@@ -85,4 +93,16 @@ public class ApiPostController
         if(listPostsDto != null) return ResponseEntity.ok(listPostsDto);
         return null;
     }
+
+    @PostMapping()
+    public ResponseEntity createPost(@RequestBody PostRequestDto post, HttpSession session) throws ParseException {
+
+        AnswerDtoInterface answer = postsServiceImpl.createPost(post, session.getId());
+        if(answer != null){
+            return ResponseEntity.ok(answer);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+
+
 }

@@ -2,6 +2,7 @@ package main.repositories;
 
 import main.model.ModerationStatus;
 import main.model.Post;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -19,12 +20,12 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     @Transactional(readOnly = true)
     @Query(value = "Select distinct p from Post p where p.isActive = :active " +
                     "AND p.moderationStatus = :ms AND p.time < curtime()")
-    List<Post> findDistinctByActiveAndModerationStatus(Byte active, ModerationStatus ms, Pageable pageable);
+    Page<Post> findDistinctByActiveAndModerationStatus(Byte active, ModerationStatus ms, Pageable pageable);
 
     @Transactional(readOnly = true)
     @Query(value = "SELECT * FROM posts WHERE is_active = :active AND moderation_status = :ms " +
                    "AND time < curtime() AND :date = Date(time)", nativeQuery = true)
-    List<Post> findAllPostsByDate(Byte active, String ms, String date, Pageable pageable);
+    Page<Post> findAllPostsByDate(Byte active, String ms, String date, Pageable pageable);
 
     @Transactional(readOnly = true)
     @Query(value = "Select p from Post p where p.isActive = :active " +
@@ -38,12 +39,12 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
             "WHERE p.is_active = :active AND p.moderation_status = :ms" +
             " AND p.time < curtime() AND :tag = t.name"
             , nativeQuery = true)
-    List<Post> findAllPostsByTag(Byte active, String ms, String tag, Pageable paging);
+    Page<Post> findAllPostsByTag(Byte active, String ms, String tag, Pageable paging);
 
     @Transactional(readOnly = true)
     @Query(value = "Select p from Post p where p.isActive = :active " +
             "AND p.moderationStatus = :ms AND p.time < curtime() AND p.text like %:query% OR p.title like %:query%")
-    List<Post> findPostBySearch(Byte active, ModerationStatus ms, String query);
+    Page<Post> findPostBySearch(Byte active, ModerationStatus ms, String query, Pageable paging);
 
     @Transactional(readOnly = true)
     @Query(value ="select date(p.time), count(p) from Post p where p.time < curtime() and" +
@@ -64,10 +65,18 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
 
     @Transactional(readOnly = true)
     @Query(value = "Select * from posts where user_id = :userId and is_active = :query", nativeQuery = true)
-    List<Post> findMyPosts(Integer userId, String query, Pageable pageable);
+    Page<Post> findMyPosts(Integer userId, String query, Pageable pageable);
 
     @Transactional(readOnly = true)
-    @Query(value = "SELECT * FROM posts where is_active = 1 and moderator_id = :userId and moderation_status = :query",
+    @Query(value = "SELECT * FROM posts where is_active = 1 and moderation_status = :query and moderator_id = :userId",
     nativeQuery = true)
-    List<Post> findMyModerationPosts(Integer userId, String query, Pageable pageable);
+    Page<Post> findMyModerationPosts(Integer userId, String query, Pageable pageable);
+
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT p FROM Post p where isActive = 1 and moderationStatus = 'NEW'")
+    Page<Post> findModerationNewPosts(Pageable pageable);
+
+    @Transactional(readOnly = true)
+    @Query(value = "SELECT count(*) FROM posts WHERE moderation_status = :query", nativeQuery = true)
+    Optional<Integer> findCountPostsByModerationStatus(String query);
 }

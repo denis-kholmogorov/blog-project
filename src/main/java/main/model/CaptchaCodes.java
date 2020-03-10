@@ -4,6 +4,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 @Data
@@ -18,7 +19,7 @@ public class CaptchaCodes
 
     @CreationTimestamp
     @Column(name = "time", nullable = false, columnDefinition = "datetime") //?
-    private Calendar time;
+    private LocalDateTime time;
 
     @Column(name = "code", nullable = false, columnDefinition = "tinytext")
     private String code;

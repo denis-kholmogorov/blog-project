@@ -1,10 +1,7 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.DTOEntity.CalendarDto;
-import main.DTOEntity.InitDto;
-import main.DTOEntity.ListTagsDto;
-import main.DTOEntity.StatisticsBlogDto;
+import main.DTOEntity.*;
 import main.model.GlobalSettings;
 import main.security.ProviderToken;
 import main.services.apiGeneralSevice.ApiGeneralServiceImpl;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import javax.swing.text.html.parser.Entity;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,9 +52,8 @@ public class ApiGeneralController
     public ResponseEntity getAllStatistics(HttpSession httpSession){
 
         Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
-        log.info(settings.get().isValue() + " значени настройки показа статистики");
+        log.info(settings.get().getName() + " значени настройки показа статистики");
         if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
-
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         else {
@@ -104,6 +101,14 @@ public class ApiGeneralController
         }
         apiGeneralService.setSettings(settings, httpSession.getId());
         return ResponseEntity.ok().body(null);
+    }
+
+    @PostMapping(value = "/moderation")
+    public ResponseEntity setModerationAction(@RequestBody ModerationDecisionDto decision, HttpSession session)
+    {
+        log.info(decision.getDecision() + "  " + decision.getPost_id());
+        apiGeneralService.setModerationDecision(decision, session.getId());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
 
     @PostMapping(value = "profile/my")  // не работает

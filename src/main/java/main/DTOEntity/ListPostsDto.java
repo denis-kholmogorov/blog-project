@@ -14,6 +14,5 @@ public class ListPostsDto
 
     public ListPostsDto(List posts){
         this.posts = posts;
-        this.count = posts.size();
     }
 }

@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Set;
 
@@ -32,7 +33,7 @@ public class User {
     @Getter
     @CreationTimestamp
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
-    private Calendar regTime;
+    private LocalDateTime regTime;
 
     @Setter
     @Getter

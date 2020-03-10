@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class Post
     @Setter
     @Getter
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Calendar time;
+    private LocalDateTime time;
 
     @Setter
     @Getter

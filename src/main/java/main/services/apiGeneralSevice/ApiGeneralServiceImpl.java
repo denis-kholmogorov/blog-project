@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
 import main.model.GlobalSettings;
 import main.model.ModerationStatus;
+import main.model.Post;
+import main.model.User;
 import main.repositories.GlobalSettingsRepository;
 import main.repositories.PostRepository;
 import main.repositories.TagRepository;
@@ -110,7 +112,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
 
-    public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findById(3);}
+    public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findByCode("STATISTICS_IS_PUBLIC");}
 
     public String loadFile(MultipartFile image){
 
@@ -188,6 +190,26 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             return true;
         }
         return false;
+    }
+
+    public AnswerDto setModerationDecision(ModerationDecisionDto decision, String session){
+        if(providerToken.validateToken(session)){
+            User user = userRepository.findById(providerToken.getUserIdBySession(session)).get();
+            if(user.getIsModerator() == 1){
+                Post post = postRepository.findById(decision.getPost_id()).orElse(null);
+                if(post != null && decision.getDecision().toLowerCase().equals("accept")){
+                    post.setModerationStatus(ModerationStatus.ACCEPTED);
+                    post.setModeratorId(user.getId());
+                }
+                else if(post != null && decision.getDecision().toLowerCase().equals("decline")){
+                    post.setModerationStatus(ModerationStatus.DECLINED);
+                    post.setModeratorId(user.getId());
+                }
+                postRepository.save(post);
+                log.info(post.getModeratorId() + " " + post.getModerationStatus());
+            }
+        }
+        return new AnswerDto(true);
     }
     
     public StatisticsBlogDto getMyStatistics (String sessionId){
