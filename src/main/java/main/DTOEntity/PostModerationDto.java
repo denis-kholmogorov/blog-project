@@ -6,6 +6,7 @@ import main.DTOEntity.PostDtoInterface.PostDtoInterface;
 import main.model.Post;
 
 import java.time.LocalDateTime;
+import java.util.Calendar;
 
 @Data
 public class PostModerationDto implements PostDtoInterface

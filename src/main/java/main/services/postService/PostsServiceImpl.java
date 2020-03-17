@@ -3,10 +3,8 @@ package main.services.postService;
 import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
-import main.model.ModerationStatus;
-import main.model.Post;
-import main.repositories.PostRepository;
-import main.repositories.UserRepository;
+import main.model.*;
+import main.repositories.*;
 import main.security.ProviderToken;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -35,12 +34,27 @@ public class PostsServiceImpl implements PostService {
 
     UserRepository userRepository;
 
+    TagRepository tagRepository;
+
+    TagToPostRepository tagToPostRepository;
+
+    PostVotesRepository postVotesRepository;
+
     @Autowired
-    public PostsServiceImpl(PostRepository postRepository, ModelMapper modelMapper, ProviderToken providerToken, UserRepository userRepository) {
+    public PostsServiceImpl(PostRepository postRepository,
+                            ModelMapper modelMapper,
+                            ProviderToken providerToken,
+                            UserRepository userRepository,
+                            TagRepository tagRepository,
+                            TagToPostRepository tagToPostRepository,
+                            PostVotesRepository postVotesRepository) {
         this.postRepository = postRepository;
         this.modelMapper = modelMapper;
         this.providerToken = providerToken;
         this.userRepository = userRepository;
+        this.tagRepository = tagRepository;
+        this.tagToPostRepository = tagToPostRepository;
+        this.postVotesRepository = postVotesRepository;
     }
 
 
@@ -89,13 +103,23 @@ public class PostsServiceImpl implements PostService {
 
 
     public PostDtoId findPostById(Integer id) {
-        Optional<Post> post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id);
-        PostDtoId postDtoId = modelMapper.map(post.get(), PostDtoId.class);
-        postDtoId.setTags(post.get().getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
-        postDtoId.setLikesCount(post.get().getLikesUsers().size());
-        postDtoId.setDislikesCount(post.get().getDisLikesUsers().size());
+        log.info(" запрос поста " + id);
+        Post post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id).orElse(null);
 
-        return postDtoId;
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        if(post != null && post.getTime().toLocalTime().isBefore(LocalDateTime.now().toLocalTime().plusMinutes(1))){
+            log.info(post.getId() + " id поста");
+            post.getViewCount();
+            PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
+            postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
+            postDtoId.setLikeCount(post.getLikesUsers().size());
+            postDtoId.setDislikeCount(post.getDisLikesUsers().size());
+            return postDtoId;
+        }
+        log.warn("пост не извлечен");
+        return null;
+
     }
 
     @Override
@@ -181,26 +205,40 @@ public class PostsServiceImpl implements PostService {
     public AnswerDtoInterface createPost(PostRequestDto postDto, String session){
         if(providerToken.validateToken(session)){
             LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T"," "),
-                    DateTimeFormatter.ofPattern("yyyy-dd-MM HH:mm"));
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
 
-            log.info(time.toLocalTime().isAfter(LocalDateTime.now().toLocalTime())+"");
-            if(!time.toLocalTime().isAfter(LocalDateTime.now().minusMinutes(1).toLocalTime())) {
+            log.info(time.toLocalTime().isBefore(LocalDateTime.now().toLocalTime())+" время установленное постом");
+            if(time.toLocalTime().isBefore(LocalDateTime.now().plusMinutes(1).toLocalTime())) {
                 time = LocalDateTime.now();
             }
             Map<String, String> error = new HashMap<>();
             if(postDto.getTitle().length() >= 10){
-                if(postDto.getText().length() >= 500){
+                if(postDto.getText().length() >= 5){
                     Integer userId = providerToken.getUserIdBySession(session);
                     Post post = new Post();
                     post.setUser(userRepository.findById(userId).get());
                     post.setIsActive(postDto.getActive());
+                    log.info(postDto.getActive() + " активность поста");
                     post.setTime(time);
                     post.setText(postDto.getText());
                     post.setTitle(postDto.getTitle());
                     post.setViewCount(0);
                     post.setModerationStatus(ModerationStatus.NEW);
                     Post p = postRepository.save(post);
-                    log.warn(p.getId().toString());
+                    log.info(p.getId() + " id сохраняемого поста");
+                    postDto.getTags().forEach(t ->{
+                        Tag tag = tagRepository.findByName(t).orElse(null);
+                        if(tag != null) {
+                            TagToPost tp = new TagToPost();
+                            tp.setTag_id(tag.getId());
+                            tp.setPost_id(post.getId());
+                            tp.setId((int) tagToPostRepository.count() + 1);
+                            tagToPostRepository.save(tp);
+                            log.info(tag.getName());
+                        }
+                        else {log.info("Tag not fount");}
+                    });
+
                     return new AnswerDto(true);
                 }
                 else {
@@ -211,17 +249,119 @@ public class PostsServiceImpl implements PostService {
             }
             return new ErrorAnswerDto(false, error);
         }
-
         return null;
     }
+
+    public AnswerDtoInterface changePost(Integer id, PostRequestDto postDto, String session){
+        if(providerToken.validateToken(session)) {
+            log.info(postDto.getTime());
+            Post post = postRepository.findById(id).get();
+            LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T", " "),
+                    DateTimeFormatter.ofPattern("yyyy-dd-MM HH:mm"));
+
+            log.info(time.toLocalTime().isAfter(LocalDateTime.now().toLocalTime()) + " время установленное постом");
+            if (time.toLocalTime().isBefore(LocalDateTime.now().minusMinutes(1).toLocalTime())) {
+                time = LocalDateTime.now();
+            }
+            Map<String, String> error = new HashMap<>();
+            if (postDto.getTitle().length() >= 10) {
+                if (postDto.getText().length() >= 5) {
+                    post.setTime(time);
+                    post.setIsActive(postDto.getActive());
+                    post.setTitle(postDto.getTitle());
+                    post.setText(postDto.getText());
+                    postRepository.save(post);
+                    postDto.getTags().forEach(t ->{
+                        Tag tag = tagRepository.findByName(t).orElse(null);
+                        if(tag != null && !post.getSetTags().contains(tag)) {
+                            TagToPost tp = new TagToPost();
+                            tp.setTag_id(tag.getId());
+                            tp.setPost_id(post.getId());
+                            tp.setId((int) tagToPostRepository.count() + 1);
+                            tagToPostRepository.save(tp);
+                            log.info(tag.getName());
+                        }
+                        else {log.info("Tag not fount");}
+                    });
+                    return new AnswerDto(true);
+                }
+                else {
+                    error.put("text", "Текст публикации слишком короткий");
+                }
+            }
+            else {
+                error.put("title", "Заголовок слишком короткий или его нет");
+            }
+            return new ErrorAnswerDto(false, error);
+        }
+        return null;
+    }
+
+    public AnswerDto setLikePost(LikeRequestDto likeDto, HttpSession session) {
+        Post post = postRepository.findById(likeDto.getPostId()).get();
+        Integer userId = providerToken.getUserIdBySession(session.getId());
+        PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
+        if (votes == null) {
+            PostVotes postVotes = PostVotes.builder()
+                    .postId(likeDto.getPostId())
+                    .userId(userId)
+                    .time(LocalDateTime.now())
+                    .value((short) 1)
+                    .build();
+            log.info("Like сохранен от пользователя " + userId + " пост " + likeDto.getPostId());
+            postVotesRepository.save(postVotes);
+            post.getLikesUsers().add(postVotes);
+            return new AnswerDto(true);
+        }
+
+        if (votes.getValue() == (short) 1) {
+            return new AnswerDto(false);
+        } else {
+            votes.setValue((short) 1);
+            postVotesRepository.save(votes);
+            return new AnswerDto(true);
+        }
+    }
+        public AnswerDto setDislikePost(LikeRequestDto likeDto, HttpSession session){
+            Integer userId = providerToken.getUserIdBySession(session.getId());
+            PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
+            Post post = postRepository.findById(likeDto.getPostId()).get();
+            if (votes == null) {
+                log.info(LocalDateTime.now() + "");
+                PostVotes postVotes = PostVotes.builder()
+                        .postId(likeDto.getPostId())
+                        .userId(userId)
+                        .time(LocalDateTime.now())
+                        .value((short) -1)
+                        .build();
+                postVotesRepository.save(postVotes);
+                post.getDisLikesUsers().add(postVotes);
+                return new AnswerDto(true);
+            }
+
+            if (votes.getValue() == (short) -1) {
+                log.info("dislike уже существует " + userId + " пост " + likeDto.getPostId());
+                return new AnswerDto(false);
+            } else{
+                votes.setValue((short) -1);
+                postVotesRepository.save(votes);
+                return new AnswerDto(true);
+            }
+
+        }
+
+
 
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
-        postDto.setLikesCount(post.getLikesUsers().size());
-        postDto.setDislikesCount(post.getDisLikesUsers().size());
+        log.info(post.getLikesUsers().size() + " лайков записан в бд like ");
+        postDto.setLikeCount(post.getLikesUsers().size());
+        log.info(post.getDisLikesUsers().size() + " диздайков записан в бд like ");
+        postDto.setDislikeCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
         postDto.setCommentCounts(post.getComments().size());
+        log.info(postDto.toString());
         return postDto;
     }
 }

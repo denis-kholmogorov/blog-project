@@ -11,6 +11,7 @@ import main.repositories.CaptchaCodesRepository;
 import main.repositories.UserRepository;
 import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -80,7 +81,7 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public AnswerLoginDto findByEmailAndPassword(String email, String password, HttpSession session)
+    public AnswerLoginDto login(String email, String password, HttpSession session)
     {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if(userOptional.isPresent())

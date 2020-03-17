@@ -2,26 +2,23 @@ package main.services.apiGeneralSevice;
 
 import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
-import main.model.GlobalSettings;
-import main.model.ModerationStatus;
-import main.model.Post;
-import main.model.User;
-import main.repositories.GlobalSettingsRepository;
-import main.repositories.PostRepository;
-import main.repositories.TagRepository;
-import main.repositories.UserRepository;
+import main.model.*;
+import main.repositories.*;
 import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,17 +37,21 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     UserRepository userRepository;
 
+    PostCommentsRepository commentsRepository;
+
     @Autowired
     public ApiGeneralServiceImpl(TagRepository tagRepository,
                                  PostRepository postRepository,
                                  GlobalSettingsRepository globalSettingsRepository,
                                  ProviderToken providerToken,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository,
+                                 PostCommentsRepository commentsRepository) {
         this.tagRepository = tagRepository;
         this.postRepository = postRepository;
         this.globalSettingsRepository = globalSettingsRepository;
         this.providerToken = providerToken;
         this.userRepository = userRepository;
+        this.commentsRepository = commentsRepository;
     }
 
     @Override
@@ -92,7 +93,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         CalendarDto calendarDto = new CalendarDto();
 
         if (year == null) {
-            year = Calendar.getInstance().get(Calendar.YEAR);
+            year = LocalDateTime.now().getYear();
         }
         listDateAndCount = postRepository.findCountPostForCalendar(year);
         listDateAndCount.forEach(s->{
@@ -114,9 +115,9 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findByCode("STATISTICS_IS_PUBLIC");}
 
-    public String loadFile(MultipartFile image){
+    public String loadFile(byte[] image){
 
-        if(!image.isEmpty()){
+        if(image.length != 0){
             int leftLimit = 48;
             int rightLimit = 122;
             int targetStringLength = 12;
@@ -140,8 +141,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             String pathImage = file + imageName + ".jpeg";
 
             try {
-                byte[] bytes = image.getBytes();
-                ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                ByteArrayInputStream bais = new ByteArrayInputStream(image);
                 BufferedImage bi = ImageIO.read(bais);
                 ImageIO.write(bi, "jpeg",new File(pathImage));
                 return pathImage;
@@ -210,6 +210,42 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             }
         }
         return new AnswerDto(true);
+    }
+
+    public ResponseEntity setComment(RequestCommentsDto commentDto, HttpSession session){
+        if(providerToken.validateToken(session.getId())) {
+            if (commentDto.getText().length() > 10)
+            {
+                Post post = postRepository.findById(commentDto.getPostId()).orElse(null);
+                if (post != null)
+                {
+                        PostComments comment = new PostComments();
+                        comment.setComment(commentDto.getText());
+                        comment.setPost(post);
+
+                        if(commentDto.getParentId() != null)
+                        {
+                            User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
+                            if(parentUser == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                            comment.setParentId(commentDto.getParentId());
+                        }
+                        comment.setUser(userRepository.findById(providerToken.getUserIdBySession(session.getId())).get());
+                        Integer commentId = commentsRepository.save(comment).getId();
+                        log.info("New comment has been added with id " + commentId);
+                        return ResponseEntity.ok(new AnswerComentDto(commentId));
+
+                }
+                else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            else
+                {
+                Map<String, String> error = new HashMap<>();
+                error.put("text", "Текст комментария не задан или слишком короткий");
+                    log.info("Post has length less 10 symbols ");
+                return ResponseEntity.ok(new ErrorAnswerDto(false, error));
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
     
     public StatisticsBlogDto getMyStatistics (String sessionId){

@@ -26,9 +26,6 @@ public class Tag
 
     @Setter
     @Getter
-    @ManyToMany
-    @JoinTable(name = "tag2post",
-            joinColumns = @JoinColumn(name = "tag_id"),
-            inverseJoinColumns = @JoinColumn(name = "post_id"))
+    @ManyToMany(mappedBy = "setTags")
     private List<Post> posts;
 }

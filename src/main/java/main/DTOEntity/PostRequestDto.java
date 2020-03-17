@@ -1,6 +1,10 @@
 package main.DTOEntity;
 
 import lombok.Data;
+import main.model.Tag;
+
+import java.util.List;
+import java.util.Set;
 
 @Data
 public class PostRequestDto
@@ -14,6 +18,6 @@ public class PostRequestDto
 
     private String text;
 
-    private String[] tags;
+    private Set<String> tags;
 
 }

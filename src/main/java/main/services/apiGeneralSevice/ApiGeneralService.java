@@ -19,5 +19,5 @@ public interface ApiGeneralService
 
     StatisticsBlogDto getAllStatistics();
 
-    String loadFile(MultipartFile file);
+    String loadFile(byte[] file);
 }

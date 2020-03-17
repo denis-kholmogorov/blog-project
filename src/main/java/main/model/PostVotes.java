@@ -1,14 +1,16 @@
 package main.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+@Builder
 @Entity
 @Table(name = "post_votes")
+@NoArgsConstructor
+@AllArgsConstructor
 public class PostVotes
 {
     @Id
@@ -20,15 +22,13 @@ public class PostVotes
 
     @Setter
     @Getter
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
 
     @Setter
     @Getter
-    @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @Column(name = "post_id", nullable = false)
+    private Integer postId;
 
     @Setter
     @Getter

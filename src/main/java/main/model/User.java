@@ -33,7 +33,7 @@ public class User {
     @Getter
     @CreationTimestamp
     @Column(name = "reg_time", nullable = false, columnDefinition = "datetime")
-    private LocalDateTime regTime;
+    private Calendar regTime;
 
     @Setter
     @Getter
@@ -64,19 +64,20 @@ public class User {
     @Setter
     @Getter
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Post> postsSet;
 
     @Setter
     @Getter
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JoinColumn(name = "user_id")
     private Set<PostVotes> setLikesPost;
 
     @Setter
     @Getter
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<PostComments> comments;
 
 }

@@ -5,11 +5,8 @@ import main.DTOEntity.*;
 import main.services.captchaService.CaptchaServiceImpl;
 import main.services.userService.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -36,7 +33,7 @@ public class ApiAuthController
     @PostMapping(value = "/register")
     public ResponseEntity register(@RequestBody RequestRegisterDto regDto){
 
-        ErrorAnswerDto answer = userService.registerUser(regDto.getE_mail(),
+        ErrorAnswerDto answer = userService.registerUser(regDto.getEmail(),
                                                          regDto.getPassword(),
                                                          regDto.getCaptcha(),
                                                          regDto.getCaptcha_secret());
@@ -45,11 +42,10 @@ public class ApiAuthController
     }
 
     @PostMapping(value = "/login")
-    public ResponseEntity login(@RequestBody RequestLoginDto loginDto)
+    public ResponseEntity login(@RequestBody RequestLoginDto loginDto, HttpSession session)
     {
-        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        HttpSession session = attr.getRequest().getSession();
-        AnswerLoginDto answer = userService.findByEmailAndPassword(loginDto.getE_mail(), loginDto.getPassword(), session);
+
+        AnswerLoginDto answer = userService.login(loginDto.getE_mail(), loginDto.getPassword(), session);
         if(answer == null) {
             return ResponseEntity.ok(new AnswerDto(false));
         }

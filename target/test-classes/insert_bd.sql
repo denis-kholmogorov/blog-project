@@ -50,3 +50,10 @@ VALUES
 ('1','1','1'),
 ('2','2','2'),
 ('3','3','3');
+
+INSERT INTO `blog_site`.`global_settings` ( `code`, `name`, `value`) VALUES
+( 'MULTIUSER_MODE', 'Многопользовательский режим', 'y'),
+('POST_PREMODERATION','Премодерация постов','y'),
+('STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога','y');
+
+;

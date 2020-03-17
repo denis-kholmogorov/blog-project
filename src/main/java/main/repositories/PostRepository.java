@@ -29,7 +29,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
 
     @Transactional(readOnly = true)
     @Query(value = "Select p from Post p where p.isActive = :active " +
-            "AND p.moderationStatus = :ms AND p.time < curtime() AND p.id = :id")
+            "AND p.moderationStatus = :ms AND p.id = :id")
     Optional<Post> findPostById(Byte active, ModerationStatus ms, Integer id);
 
     @Transactional(readOnly = true)
@@ -48,7 +48,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
 
     @Transactional(readOnly = true)
     @Query(value ="select date(p.time), count(p) from Post p where p.time < curtime() and" +
-            " YEAR(p.time) = :year group by p.time")
+            " YEAR(p.time) = :year group by date(p.time)")
     List<String> findCountPostForCalendar(Integer year);
 
     @Transactional(readOnly = true)
@@ -76,7 +76,4 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
     @Query(value = "SELECT p FROM Post p where isActive = 1 and moderationStatus = 'NEW'")
     Page<Post> findModerationNewPosts(Pageable pageable);
 
-    @Transactional(readOnly = true)
-    @Query(value = "SELECT count(*) FROM posts WHERE moderation_status = :query", nativeQuery = true)
-    Optional<Integer> findCountPostsByModerationStatus(String query);
 }

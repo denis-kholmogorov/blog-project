@@ -1,10 +1,8 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import main.DTOEntity.ListPostsDto;
-import main.DTOEntity.PostDtoId;
+import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
-import main.DTOEntity.PostRequestDto;
 import main.security.ProviderToken;
 import main.services.postService.PostsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,10 +56,13 @@ public class ApiPostController
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<PostDtoId> postById(@PathVariable("id") Integer id)
+    public ResponseEntity postById(@PathVariable("id") Integer id)
     {
         PostDtoId post = postsServiceImpl.findPostById(id);
-        return ResponseEntity.ok(post);
+        if(post != null) {
+            return ResponseEntity.ok(post);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @GetMapping(value ="/search", params = {"offset", "limit", "query"})
@@ -104,5 +105,25 @@ public class ApiPostController
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
+    @PutMapping(value = "/{id}")
+    public ResponseEntity changePost(@RequestBody PostRequestDto postDto, @PathVariable("id") Integer id, HttpSession session){
+        AnswerDtoInterface answer = postsServiceImpl.changePost(id, postDto, session.getId());
+        if(answer != null){
+            return ResponseEntity.ok(answer);
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+    }
+
+    @PostMapping(value = "/like")
+    public ResponseEntity setLikePost(@RequestBody LikeRequestDto dto, HttpSession session){
+        AnswerDto answer = postsServiceImpl.setLikePost(dto, session);
+        return ResponseEntity.ok(answer);
+    }
+
+    @PostMapping(value = "/dislike")
+    public ResponseEntity setDislikePost(@RequestBody LikeRequestDto dto, HttpSession session){
+        AnswerDto answer = postsServiceImpl.setDislikePost(dto, session);
+        return ResponseEntity.ok(answer);
+    }
 
 }

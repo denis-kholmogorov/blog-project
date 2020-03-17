@@ -10,19 +10,21 @@ import javax.persistence.*;
 @Table(name = "tag2post")
 public class TagToPost
 {
-    @Id
     @Setter
     @Getter
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
     private Integer id;
 
     @Setter
     @Getter
+    @Column(nullable = false)
     private Integer post_id;
 
     @Setter
     @Getter
+    @Column(nullable = false)
     private Integer tag_id;
 }
 

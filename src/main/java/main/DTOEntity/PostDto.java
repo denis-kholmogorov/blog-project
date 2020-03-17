@@ -25,9 +25,9 @@ public class PostDto implements PostDtoInterface {
 
     private String announce;
 
-    private Integer likesCount;
+    private Integer likeCount;
 
-    private Integer dislikesCount;
+    private Integer dislikeCount;
 
     private Integer commentCounts;
 

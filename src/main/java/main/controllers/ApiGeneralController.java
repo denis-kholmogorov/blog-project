@@ -42,8 +42,7 @@ public class ApiGeneralController
     }
 
     @GetMapping(value = "/calendar", params = {"year"})
-    public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year, HttpSession session){
-        log.info("id session " + session.getId());
+    public ResponseEntity<CalendarDto> postsByCalendar(@RequestParam("year") Integer year){
         CalendarDto calendarDto = apiGeneralService.getAllPostByCalendar(year);
         return ResponseEntity.ok(calendarDto);
     }
@@ -73,7 +72,7 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "/image")
-    public ResponseEntity uploadImage(@RequestParam("image") MultipartFile image)
+    public ResponseEntity uploadImage(@RequestBody byte[] image)
     {
         String answer = apiGeneralService.loadFile(image);
         if(answer != null){
@@ -94,7 +93,7 @@ public class ApiGeneralController
     public ResponseEntity setGlobalSettings(@RequestBody Map<String, Boolean> settings, HttpSession httpSession)
     {
 
-        log.info("Получение putmapping глобальных настроек - " + settings.size()+ " ");
+        log.info("Получение put mapping глобальных настроек - " + settings.size()+ " ");
 
         for(Object a: settings.keySet()){
             System.out.println(a + " " + settings.get(a));
@@ -120,6 +119,13 @@ public class ApiGeneralController
     {
         System.out.println(file + " " + name + " " + email);
         return null;
+    }
+
+    @PostMapping(value = "/comment")
+    public ResponseEntity setComments(@RequestBody RequestCommentsDto comment, HttpSession session){
+        ResponseEntity answer = apiGeneralService.setComment(comment, session);
+
+        return answer;
     }
 }
 

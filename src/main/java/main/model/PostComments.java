@@ -1,6 +1,7 @@
 package main.model;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class PostComments
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @CreationTimestamp
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private LocalDateTime time;
+    private Calendar time;
 }

@@ -18,8 +18,8 @@ public class CaptchaCodes
     private Integer id;
 
     @CreationTimestamp
-    @Column(name = "time", nullable = false, columnDefinition = "datetime") //?
-    private LocalDateTime time;
+    @Column(name = "time", nullable = false, columnDefinition = "datetime")
+    private Calendar time;
 
     @Column(name = "code", nullable = false, columnDefinition = "tinytext")
     private String code;
