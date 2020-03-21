@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService
     public User findById(Integer id)
     {
         Optional<User> user = userRepository.findById(id);
-        if(!user.isPresent()) log.warn("Пользователь с email {} не найден", user.get().getEmail());
+        if(user.isEmpty()) log.warn("Пользователь с email {} не найден", user.get().getEmail());
         log.info("Найден пользователь с email {}", user.get().getEmail());
         return user.get();
     }
@@ -84,21 +84,22 @@ public class UserServiceImpl implements UserService
     public AnswerLoginDto login(String email, String password, HttpSession session)
     {
         Optional<User> userOptional = userRepository.findByEmail(email);
-        if(userOptional.isPresent())
+        log.info("LOGIN" +userOptional.get().getEmail()
+                + " User ");
+        User user = userOptional.get();
+        String userPassword = user.getPassword();
+        log.info("LOGIN" +passwordEncoder.matches(password, userPassword)
+                + " НАйДЕН ");
+        if(passwordEncoder.matches(password, userPassword) && !providerToken.validateToken(session.getId()))
         {
-            User user = userOptional.get();
-            String userPassword = user.getPassword();
-            if(passwordEncoder.matches(password, userPassword) && !providerToken.validateToken(session.getId()))
-            {
-                providerToken.createToken(session.getId(), user.getId());
-                log.info("User with email " + user.getEmail() + " has been authorization");
-                Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
-                UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
-                                                       user.getIsModerator(), moderationCount);
-                return new AnswerLoginDto(answer);
-            }
-            log.info("User with email " + user.getEmail() + " IS NOT authorization");
+            providerToken.createToken(session.getId(), user.getId());
+            log.info("User with email " + user.getEmail() + " has been authorization");
+            Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
+            UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
+                                                   user.getIsModerator(), moderationCount);
+            return new AnswerLoginDto(answer);
         }
+        log.info("User with email " + user.getEmail() + " IS NOT authorization");
         return null;
     }
 

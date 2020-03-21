@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 
-
 public class UserLoginDto
 {
     Integer id;

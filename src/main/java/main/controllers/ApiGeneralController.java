@@ -9,10 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
-import javax.swing.text.html.parser.Entity;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,7 +49,6 @@ public class ApiGeneralController
     public ResponseEntity getAllStatistics(HttpSession httpSession){
 
         Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
-        log.info(settings.get().getName() + " значени настройки показа статистики");
         if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
@@ -110,21 +107,26 @@ public class ApiGeneralController
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
 
-    @PostMapping(value = "profile/my")  // не работает
-    public ResponseEntity setMyProfile(@RequestBody MultipartFile file,
-                                                    Integer removeImage,
-                                                    String name,
-                                                    String email,
-                                                    String password)
-    {
-        System.out.println(file + " " + name + " " + email);
-        return null;
-    }
 
     @PostMapping(value = "/comment")
     public ResponseEntity setComments(@RequestBody RequestCommentsDto comment, HttpSession session){
-        ResponseEntity answer = apiGeneralService.setComment(comment, session);
 
+        return apiGeneralService.setComment(comment, session);
+    }
+
+    @PostMapping(value = "profile/my", consumes = {"multipart/form-data"})
+    public ResponseEntity setMyProfileWithPhoto(@ModelAttribute RequestProfileWithPhotoDto profileDto, HttpSession session)
+    {
+        ResponseEntity answer = apiGeneralService.setMyProfile(profileDto, session);
+        if(answer == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        return answer;
+    }
+
+    @PostMapping(value = "profile/my", produces = {"application/json"})
+    public ResponseEntity setMyProfile(@RequestBody RequestProfileDto profileDto, HttpSession session)
+    {
+        ResponseEntity answer = apiGeneralService.setMyProfile(profileDto, session);
+        if(answer == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         return answer;
     }
 }

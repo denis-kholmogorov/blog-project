@@ -8,6 +8,7 @@ import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -16,6 +17,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -39,19 +41,23 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     PostCommentsRepository commentsRepository;
 
+    PasswordEncoder passwordEncoder;
+
     @Autowired
     public ApiGeneralServiceImpl(TagRepository tagRepository,
                                  PostRepository postRepository,
                                  GlobalSettingsRepository globalSettingsRepository,
                                  ProviderToken providerToken,
                                  UserRepository userRepository,
-                                 PostCommentsRepository commentsRepository) {
+                                 PostCommentsRepository commentsRepository,
+                                 PasswordEncoder passwordEncoder) {
         this.tagRepository = tagRepository;
         this.postRepository = postRepository;
         this.globalSettingsRepository = globalSettingsRepository;
         this.providerToken = providerToken;
         this.userRepository = userRepository;
         this.commentsRepository = commentsRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -65,9 +71,8 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         } catch (IOException e) {
             e.printStackTrace();
         }
-        InitDto initDto = new InitDto(list.get(0), list.get(1), list.get(2),
+        return new InitDto(list.get(0), list.get(1), list.get(2),
                 list.get(3), list.get(4), list.get(5));
-        return initDto;
     }
 
     @Override
@@ -133,7 +138,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 generatedString.insert(i,"/");
             }
 
-            generatedString.insert(0,"upload");
+            generatedString.insert(0,"src/main/resources/static/img/");
             String dirs = generatedString.substring(0, generatedString.lastIndexOf("/"));
             String imageName = generatedString.substring(generatedString.lastIndexOf("/"));
             File file = new File(dirs);
@@ -184,6 +189,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                         log.info("Changed value setting " + code);
                         gs.setValue(settings.get(code));
                     }
+
                 });
             }
             globalSettingsRepository.saveAll(listSettingsFromBD);
@@ -194,7 +200,11 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     public AnswerDto setModerationDecision(ModerationDecisionDto decision, String session){
         if(providerToken.validateToken(session)){
-            User user = userRepository.findById(providerToken.getUserIdBySession(session)).get();
+            Optional<User> optionalUser = userRepository.findById(providerToken.getUserIdBySession(session));
+            if(optionalUser.isEmpty()){
+                return new AnswerDto(false);
+            }
+            User user = optionalUser.get();
             if(user.getIsModerator() == 1){
                 Post post = postRepository.findById(decision.getPost_id()).orElse(null);
                 if(post != null && decision.getDecision().toLowerCase().equals("accept")){
@@ -205,6 +215,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                     post.setModerationStatus(ModerationStatus.DECLINED);
                     post.setModeratorId(user.getId());
                 }
+                assert post != null;
                 postRepository.save(post);
                 log.info(post.getModeratorId() + " " + post.getModerationStatus());
             }
@@ -212,7 +223,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         return new AnswerDto(true);
     }
 
-    public ResponseEntity setComment(RequestCommentsDto commentDto, HttpSession session){
+    public ResponseEntity<?>  setComment(RequestCommentsDto commentDto, HttpSession session){
         if(providerToken.validateToken(session.getId())) {
             if (commentDto.getText().length() > 10)
             {
@@ -229,7 +240,12 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                             if(parentUser == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
                             comment.setParentId(commentDto.getParentId());
                         }
-                        comment.setUser(userRepository.findById(providerToken.getUserIdBySession(session.getId())).get());
+                        Optional<User> userOptional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+                        if(userOptional.isPresent()){
+                            comment.setUser(userOptional.get());
+                        }else{
+                            log.info("Юзер ненайден");
+                        }
                         Integer commentId = commentsRepository.save(comment).getId();
                         log.info("New comment has been added with id " + commentId);
                         return ResponseEntity.ok(new AnswerComentDto(commentId));
@@ -254,5 +270,72 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
            return new StatisticsBlogDto(postRepository.findAllStatisticsById(userId));
         }
         return null;
+    }
+
+    public ResponseEntity<?> setMyProfile(RequestProfileDto profileDto, HttpSession session){
+        ErrorAnswerDto errors = new ErrorAnswerDto();
+        if(providerToken.validateToken(session.getId())) {
+            Optional<User> optional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+            if(optional.isPresent())
+            {
+                User user = optional.get();
+
+                if (profileDto.getPassword() != null && profileDto.getPassword().length() >= 6){
+                    user.setPassword(passwordEncoder.encode(profileDto.getPassword()));
+                }
+                else if(profileDto.getPassword().length() > 0 && profileDto.getPassword().length() < 6){
+                    log.info(profileDto.getPassword() + " password");
+                    errors.getErrors().put("password","Пароль короче 6-ти символов");
+                    return ResponseEntity.ok(errors);
+                }
+
+                if(profileDto.getName().matches("\\w+") && profileDto.getName().length() > 2){
+                    user.setName(profileDto.getName());
+                }else {
+                    errors.getErrors().put("name","Имя указано неверно");
+                }
+
+                if(userRepository.findByEmail(profileDto.getEmail()).isEmpty()){
+                    user.setEmail(profileDto.getEmail());
+                }else if (!profileDto.getEmail().isEmpty() && profileDto.getEmail().length() > 1){
+                    errors.getErrors().put("email","Этот e-mail уже зарегистрирован");
+                    return ResponseEntity.ok(errors);
+                }
+
+                if(profileDto.getRemovePhoto() != null){
+                    File file = new File(user.getPhoto());
+                    if(file.delete()) log.info("Изображение удалено");// удалить
+
+                    if(profileDto instanceof RequestProfileWithPhotoDto){
+                        if(((RequestProfileWithPhotoDto)profileDto).getPhoto()!= null){
+                            try {
+                                user.setPhoto(loadAvatar(((RequestProfileWithPhotoDto)profileDto).getPhoto().getBytes()));
+                                log.info("Картинка загрузилась");
+                            } catch (IOException e) {
+                                System.out.println("Файл не загружен");
+                            }
+                        }
+                    }
+                }
+                User userSaved = userRepository.save(user);
+                log.info(userSaved.toString() + " сохранен");
+                return ResponseEntity.ok(new AnswerDto(true));
+            }
+        }
+        return null;
+    }
+
+    public String loadAvatar(byte[] image) throws IOException {
+
+        String path = "src/main/resources/static/img/";
+        String imageName = "avatarkka";
+        log.info(imageName + " имя файла");
+        String pathImage = path + imageName + ".jpg";
+        log.info(pathImage + " путь файла");
+        ByteArrayInputStream bais = new ByteArrayInputStream(image);
+        BufferedImage bi = ImageIO.read(bais);
+        ImageIO.write(bi, "jpg", new File(pathImage));
+        return imageName + ".jpg";
+
     }
 }

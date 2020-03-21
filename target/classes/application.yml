@@ -7,3 +7,5 @@ spring.main.allow-bean-definition-overriding: true
 intervalCountTime: 1
 spring.security.user.name: admin
 spring.security.user.password: 12345
+#spring.http.multipart.location: /home/denis/IdeaProjects/Diplom/upload
+#java.tmp.dir: /home/denis/IdeaProjects/Diplom/upload
