@@ -1,10 +1,9 @@
-package main.DTOEntity;
+package main.DTOEntity.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import net.bytebuddy.implementation.bind.annotation.SuperCall;
 import org.springframework.web.multipart.MultipartFile;
 
 @EqualsAndHashCode(callSuper = true)

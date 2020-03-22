@@ -1,4 +1,4 @@
-package main.DTOEntity;
+package main.DTOEntity.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

@@ -56,7 +56,7 @@ public class ApiPostController
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity postById(@PathVariable("id") Integer id)
+    public ResponseEntity<?> postById(@PathVariable("id") Integer id)
     {
         PostDtoId post = postsServiceImpl.findPostById(id);
         if(post != null) {
@@ -75,7 +75,7 @@ public class ApiPostController
     }
 
     @GetMapping(value = "/my", params = {"offset","limit","status"})
-    public ResponseEntity getMyPosts(@RequestParam("offset") int offset,
+    public ResponseEntity<?> getMyPosts(@RequestParam("offset") int offset,
                                      @RequestParam("limit") int limit,
                                      @RequestParam("status") String status,
                                      HttpSession httpSession){
@@ -85,7 +85,7 @@ public class ApiPostController
     }
 
     @GetMapping(value = "/moderation", params ={"offset","limit","status"})
-    public ResponseEntity getMyModerationPosts(@RequestParam("offset") int offset,
+    public ResponseEntity<?> getMyModerationPosts(@RequestParam("offset") int offset,
                                                @RequestParam("limit") int limit,
                                                @RequestParam("status") String status,
                                                HttpSession httpSession)
@@ -96,7 +96,7 @@ public class ApiPostController
     }
 
     @PostMapping()
-    public ResponseEntity createPost(@RequestBody PostRequestDto post, HttpSession session) throws ParseException {
+    public ResponseEntity<?> createPost(@RequestBody RequestPostDto post, HttpSession session){
 
         AnswerDtoInterface answer = postsServiceImpl.createPost(post, session.getId());
         if(answer != null){
@@ -106,7 +106,7 @@ public class ApiPostController
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity changePost(@RequestBody PostRequestDto postDto, @PathVariable("id") Integer id, HttpSession session){
+    public ResponseEntity<?> changePost(@RequestBody RequestPostDto postDto, @PathVariable("id") Integer id, HttpSession session){
         AnswerDtoInterface answer = postsServiceImpl.changePost(id, postDto, session.getId());
         if(answer != null){
             return ResponseEntity.ok(answer);
@@ -115,13 +115,13 @@ public class ApiPostController
     }
 
     @PostMapping(value = "/like")
-    public ResponseEntity setLikePost(@RequestBody LikeRequestDto dto, HttpSession session){
+    public ResponseEntity<?> setLikePost(@RequestBody LikeRequestDto dto, HttpSession session){
         AnswerDto answer = postsServiceImpl.setLikePost(dto, session);
         return ResponseEntity.ok(answer);
     }
 
     @PostMapping(value = "/dislike")
-    public ResponseEntity setDislikePost(@RequestBody LikeRequestDto dto, HttpSession session){
+    public ResponseEntity<?> setDislikePost(@RequestBody LikeRequestDto dto, HttpSession session){
         AnswerDto answer = postsServiceImpl.setDislikePost(dto, session);
         return ResponseEntity.ok(answer);
     }

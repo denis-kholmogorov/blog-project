@@ -1,4 +1,4 @@
-package main.DTOEntity;
+package main.DTOEntity.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

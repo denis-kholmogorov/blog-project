@@ -19,7 +19,7 @@ public interface CaptchaCodesRepository extends CrudRepository<CaptchaCodes, Int
     List<CaptchaCodes> findAllOlderCodes(String countTime);
 
     //@Query("SELECT c FROM CaptchaCodes c where c.code = :code")
-    List<CaptchaCodes> findAllByCode(String code);
+    Optional<CaptchaCodes> findByCode(String code);
 
 
 

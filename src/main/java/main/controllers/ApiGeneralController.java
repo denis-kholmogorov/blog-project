@@ -2,6 +2,9 @@ package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
+import main.DTOEntity.request.RequestCommentsDto;
+import main.DTOEntity.request.RequestProfileDto;
+import main.DTOEntity.request.RequestProfileWithPhotoDto;
 import main.model.GlobalSettings;
 import main.security.ProviderToken;
 import main.services.apiGeneralSevice.ApiGeneralServiceImpl;
@@ -46,7 +49,7 @@ public class ApiGeneralController
     }
 
     @GetMapping(value = "/statistics/all")
-    public ResponseEntity getAllStatistics(HttpSession httpSession){
+    public ResponseEntity<?> getAllStatistics(HttpSession httpSession){
 
         Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
         if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
@@ -60,7 +63,7 @@ public class ApiGeneralController
     }
 
     @GetMapping(value = "/statistics/my")
-    public ResponseEntity getMyStatistics(HttpSession httpSession){         /*/*/
+    public ResponseEntity<?> getMyStatistics(HttpSession httpSession){         /*/*/
         StatisticsBlogDto gs = apiGeneralService.getMyStatistics(httpSession.getId());
         if(gs!=null){
             return ResponseEntity.ok(gs);
@@ -69,7 +72,7 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "/image")
-    public ResponseEntity uploadImage(@RequestBody byte[] image)
+    public ResponseEntity<?> uploadImage(@RequestBody byte[] image)
     {
         String answer = apiGeneralService.loadFile(image);
         if(answer != null){
@@ -79,7 +82,7 @@ public class ApiGeneralController
     }
 
     @GetMapping(value = "/settings")
-    public ResponseEntity getGlobalSettings(HttpSession httpSession)
+    public ResponseEntity<?> getGlobalSettings(HttpSession httpSession)
     {
         log.info("Зашли в настройки get_mapping");
         Map<String, Boolean> settings = apiGeneralService.getSettings(httpSession.getId());
@@ -87,7 +90,7 @@ public class ApiGeneralController
     }
 
     @PutMapping(value = "/settings")
-    public ResponseEntity setGlobalSettings(@RequestBody Map<String, Boolean> settings, HttpSession httpSession)
+    public ResponseEntity<?> setGlobalSettings(@RequestBody Map<String, Boolean> settings, HttpSession httpSession)
     {
 
         log.info("Получение put mapping глобальных настроек - " + settings.size()+ " ");
@@ -100,7 +103,7 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "/moderation")
-    public ResponseEntity setModerationAction(@RequestBody ModerationDecisionDto decision, HttpSession session)
+    public ResponseEntity<?> setModerationAction(@RequestBody ModerationDecisionDto decision, HttpSession session)
     {
         log.info(decision.getDecision() + "  " + decision.getPost_id());
         apiGeneralService.setModerationDecision(decision, session.getId());
@@ -109,13 +112,13 @@ public class ApiGeneralController
 
 
     @PostMapping(value = "/comment")
-    public ResponseEntity setComments(@RequestBody RequestCommentsDto comment, HttpSession session){
+    public ResponseEntity<?> setComments(@RequestBody RequestCommentsDto comment, HttpSession session){
 
         return apiGeneralService.setComment(comment, session);
     }
 
     @PostMapping(value = "profile/my", consumes = {"multipart/form-data"})
-    public ResponseEntity setMyProfileWithPhoto(@ModelAttribute RequestProfileWithPhotoDto profileDto, HttpSession session)
+    public ResponseEntity<?> setMyProfileWithPhoto(@ModelAttribute RequestProfileWithPhotoDto profileDto, HttpSession session)
     {
         ResponseEntity answer = apiGeneralService.setMyProfile(profileDto, session);
         if(answer == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
@@ -123,11 +126,12 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "profile/my", produces = {"application/json"})
-    public ResponseEntity setMyProfile(@RequestBody RequestProfileDto profileDto, HttpSession session)
+    public ResponseEntity<?> setMyProfile(@RequestBody RequestProfileDto profileDto, HttpSession session)
     {
         ResponseEntity answer = apiGeneralService.setMyProfile(profileDto, session);
         if(answer == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         return answer;
     }
+
 }
 

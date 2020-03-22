@@ -12,8 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
@@ -202,7 +200,7 @@ public class PostsServiceImpl implements PostService {
         return null;
     }
 
-    public AnswerDtoInterface createPost(PostRequestDto postDto, String session){
+    public AnswerDtoInterface createPost(RequestPostDto postDto, String session){
         if(providerToken.validateToken(session)){
             LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T"," "),
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
@@ -252,7 +250,7 @@ public class PostsServiceImpl implements PostService {
         return null;
     }
 
-    public AnswerDtoInterface changePost(Integer id, PostRequestDto postDto, String session){
+    public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session){
         if(providerToken.validateToken(session)) {
             log.info(postDto.getTime());
             Post post = postRepository.findById(id).get();

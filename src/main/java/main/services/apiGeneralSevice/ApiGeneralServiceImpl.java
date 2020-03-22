@@ -2,6 +2,9 @@ package main.services.apiGeneralSevice;
 
 import lombok.extern.slf4j.Slf4j;
 import main.DTOEntity.*;
+import main.DTOEntity.request.RequestCommentsDto;
+import main.DTOEntity.request.RequestProfileDto;
+import main.DTOEntity.request.RequestProfileWithPhotoDto;
 import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
@@ -17,7 +20,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -76,9 +78,9 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     @Override
-    public ListTagsDto findTagsByQuery(String query)
+    public ListTagsDto findTagsByQuery(String queryParam)
     {
-        query.toLowerCase();
+        String query = queryParam.toLowerCase();
         List<TagDto> list = tagRepository.findAllTagWithWeight((byte) 1, ModerationStatus.ACCEPTED);
         double maxWeight = list.get(0).getWeight();
         list.forEach(tagDto -> tagDto.setWeight(tagDto.getWeight()/maxWeight));
@@ -283,9 +285,9 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 if (profileDto.getPassword() != null && profileDto.getPassword().length() >= 6){
                     user.setPassword(passwordEncoder.encode(profileDto.getPassword()));
                 }
-                else if(profileDto.getPassword().length() > 0 && profileDto.getPassword().length() < 6){
+                else if (profileDto.getPassword() != null && profileDto.getPassword().length() > 0 && profileDto.getPassword().length() < 6) {
                     log.info(profileDto.getPassword() + " password");
-                    errors.getErrors().put("password","Пароль короче 6-ти символов");
+                    errors.getErrors().put("password", "Пароль короче 6-ти символов");
                     return ResponseEntity.ok(errors);
                 }
 

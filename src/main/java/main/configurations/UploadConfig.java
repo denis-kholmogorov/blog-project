@@ -14,7 +14,7 @@ import javax.servlet.MultipartConfigElement;
 @Configuration
 @ComponentScan
 @EnableAutoConfiguration
-public class UploadConfiguration
+public class UploadConfig
 {
     @Bean
     MultipartConfigElement multipartConfigElement(){
