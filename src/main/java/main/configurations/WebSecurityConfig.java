@@ -17,22 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter
 {
 
-    private final ProviderToken providerToken;
-
-    @Autowired
-    public WebSecurityConfig(ProviderToken providerToken) {
-        this.providerToken = providerToken;
-    }
-
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception{
-        return super.authenticationManagerBean();
-    }
-
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
 
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -41,7 +25,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .and()
                 .antMatcher("/**").authorizeRequests().anyRequest().permitAll();
-                /*.and()
-                .apply(new ConfigurationFilter(providerToken));*/
     }
 }

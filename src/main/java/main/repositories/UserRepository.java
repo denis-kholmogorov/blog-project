@@ -18,4 +18,6 @@ public interface UserRepository extends CrudRepository<User, Integer>
 
     @Query("SELECT count(p) FROM Post p where moderatorId = :id")
     Integer findCountModerationPostsById(Integer id);
+
+    Optional<User> findByCode(String code);
 }

@@ -5,23 +5,34 @@ import main.DTOEntity.AnswerDto;
 import main.DTOEntity.AnswerLoginDto;
 import main.DTOEntity.ErrorAnswerDto;
 import main.DTOEntity.UserLoginDto;
+import main.DTOEntity.request.RequestRestoreDto;
+import main.DTOEntity.request.RequestSetPasswordDto;
 import main.model.CaptchaCodes;
 import main.model.User;
 import main.repositories.CaptchaCodesRepository;
 import main.repositories.UserRepository;
 import main.security.ProviderToken;
+import main.services.emailService.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.constraints.Email;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService
 {
+
+    @Value("${intervalCountTime}")
+    String intervalCount;
 
     private UserRepository userRepository;
 
@@ -31,23 +42,27 @@ public class UserServiceImpl implements UserService
 
     private ProviderToken providerToken;
 
+    private EmailService emailService;
+
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            CaptchaCodesRepository codesRepository,
                            PasswordEncoder passwordEncoder,
-                           ProviderToken providerToken) {
+                           ProviderToken providerToken,
+                           EmailService emailService) {
         this.userRepository = userRepository;
         this.codesRepository = codesRepository;
         this.passwordEncoder = passwordEncoder;
         this.providerToken = providerToken;
+        this.emailService = emailService;
     }
 
     @Override
     public ErrorAnswerDto registerUser(String email, String password, String captcha, String captcha_secret) {
         ErrorAnswerDto errorAnswer = new ErrorAnswerDto();
-        List<CaptchaCodes> captchaList = codesRepository.findAllByCode(captcha);
+        Optional<CaptchaCodes> optionalCaptcha = codesRepository.findByCode(captcha);
         if (password.length() >= 6) {
-            if (captchaList.size() == 1 && captchaList.get(0).getSecretCode().equals(captcha_secret)) {
+            if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(captcha_secret)) {
                 if (userRepository.findByEmail(email).isEmpty()) {
                     User user = new User();
                     user.setIsModerator((byte) 0);
@@ -74,36 +89,37 @@ public class UserServiceImpl implements UserService
     public User findById(Integer id)
     {
         Optional<User> user = userRepository.findById(id);
-        if(!user.isPresent()) log.warn("Пользователь с email {} не найден", user.get().getEmail());
+        if(user.isEmpty()) log.warn("Пользователь с email {} не найден", user.get().getEmail());
         log.info("Найден пользователь с email {}", user.get().getEmail());
         return user.get();
     }
 
     @Override
-    public AnswerLoginDto findByEmailAndPassword(String email, String password, HttpSession session)
+    public AnswerLoginDto login(String email, String password, HttpSession session)
     {
         Optional<User> userOptional = userRepository.findByEmail(email);
-        if(userOptional.isPresent())
+        log.info("LOGIN" +userOptional.get().getEmail()
+                + " User ");
+        User user = userOptional.get();
+        String userPassword = user.getPassword();
+        log.info("LOGIN " +passwordEncoder.matches(password, userPassword)
+                + " НАйДЕН ");
+        if(passwordEncoder.matches(password, userPassword) && !providerToken.validateToken(session.getId()))
         {
-            User user = userOptional.get();
-            String userPassword = user.getPassword();
-            if(passwordEncoder.matches(password, userPassword) && !providerToken.validateToken(session.getId()))
-            {
-                providerToken.createToken(session.getId(), user.getId());
-                log.info("User with email " + user.getEmail() + " authorisation");
-                Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
-                UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
-                                                       user.getIsModerator(), moderationCount);
-                return new AnswerLoginDto(answer);
-            }
-            log.info("User with email " + user.getEmail() + " IS NOT authorisation");
+            providerToken.createToken(session.getId(), user.getId());
+            log.info("User with email " + user.getEmail() + " has been authorization");
+            Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
+            UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
+                                                   user.getIsModerator(), moderationCount);
+            return new AnswerLoginDto(answer);
         }
+        log.info("User with email " + user.getEmail() + " IS NOT authorization");
         return null;
     }
 
     @Override
     public  AnswerLoginDto findBySession(String sessionId){
-        Integer userId = providerToken.getUserBySession(sessionId);
+        Integer userId = providerToken.getUserIdBySession(sessionId);
         if(userId != null){
             Optional<User> userOptional = userRepository.findById(userId);
             if(userOptional.isPresent()){
@@ -118,9 +134,49 @@ public class UserServiceImpl implements UserService
         return null;
     }
 
+    public AnswerDto restorePassword(RequestRestoreDto restoreDto){
+        Optional<User> optionalUser = userRepository.findByEmail(restoreDto.getEmail());
+        if (optionalUser.get() == null) {
+            return new AnswerDto(false);
+        }
+        User user = optionalUser.get();
+        String token = UUID.randomUUID().toString();
+        user.setCode(token);
+        token = userRepository.save(user).getCode();
+
+        String link = "http://localhost:8004/login/change-password/" + token;
+        String message = String.format("Для восстановления пароля перейдите по ссылке %s", link );
+        emailService.send(restoreDto.getEmail(), "Password recovery", message);
+        return new AnswerDto(true);
+
+    }
+
+    public ErrorAnswerDto setPassword(RequestSetPasswordDto requestDto){
+        ErrorAnswerDto errorAnswer = new ErrorAnswerDto();
+        if(requestDto.getPassword().length() < 6) {
+            codesRepository.deleteAll(codesRepository.findAllOlderCodes(intervalCount));
+            Optional<CaptchaCodes> optionalCaptcha = codesRepository.findByCode(requestDto.getCaptcha());
+            if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(requestDto.getCaptchaSecret())) {
+                Optional<User> optionalUser = userRepository.findByCode(requestDto.getCode());
+                if (optionalUser.isPresent()) {
+                    User user = optionalUser.get();
+                    user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
+                    userRepository.save(user);
+                    return null;
+                }
+                else errorAnswer.getErrors().put("code", "Ссылка для восстановления пароля устарела.\n" +
+                        "<a href=”/auth/restore”>Запросить ссылку снова</a>");
+            }
+            else errorAnswer.getErrors().put("captcha","Код с картинки введён неверно");
+        }
+        else errorAnswer.getErrors().put("password", "Пароль короче 6-ти символов");
+        return errorAnswer;
+    }
+
     @Override
     public AnswerDto logoutUser(String sessionId) {
         providerToken.deleteToken(sessionId);
+        log.info("Удален юзер " + sessionId);
         return new AnswerDto(true);
     }
 

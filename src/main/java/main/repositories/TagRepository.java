@@ -5,9 +5,12 @@ import main.model.ModerationStatus;
 import main.model.Tag;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.expression.spel.ast.OpAnd;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TagRepository extends CrudRepository<Tag, Integer>
@@ -19,4 +22,5 @@ public interface TagRepository extends CrudRepository<Tag, Integer>
     List<TagDto> findAllTagWithWeight(Byte active, ModerationStatus ms);
 
 
+    Optional<Tag> findByName(String name);
 }

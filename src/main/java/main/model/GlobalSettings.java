@@ -1,6 +1,8 @@
 package main.model;
 
 import lombok.Data;
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 
 @Data
@@ -19,8 +21,9 @@ public class GlobalSettings
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Type(type = "yes_no")
     @Column(name = "value", nullable = false)
-    private String value;
+    private boolean value;
 
 
 }

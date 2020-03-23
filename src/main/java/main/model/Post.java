@@ -5,9 +5,8 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 @Entity
@@ -29,13 +28,13 @@ public class Post
     @Setter
     @Getter
     @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINE') default 'NEW'")
+    @Column(name = "moderation_status", nullable = false, columnDefinition = "enum('NEW', 'ACCEPTED', 'DECLINED') default 'NEW'")
     private ModerationStatus moderationStatus;
 
     @Setter
     @Getter
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Calendar time;
+    private LocalDateTime time;
 
     @Setter
     @Getter
@@ -69,24 +68,26 @@ public class Post
     @JoinTable(name = "tag2post",
             joinColumns = @JoinColumn(name = "post_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
-    private Set<Tag> setTags;
+    private Set<Tag> setTags = new HashSet<>();
 
     @Setter
     @Getter
+    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)   //example
+    @JoinColumn(name = "post_id")
     @Where(clause = "value = 1")
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)  //example
-    private List<PostVotes> likesUsers;
+    private List<PostVotes> likesUsers = new ArrayList<>();;
 
     @Setter
     @Getter
+    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)  //example
+    @JoinColumn(name = "post_id")
     @Where(clause = "value = -1")
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)  //example
-    private List<PostVotes> disLikesUsers;
+    private List<PostVotes> disLikesUsers = new ArrayList<>();
 
     @Setter
     @Getter
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostComments> comments;
+    private List<PostComments> comments = new ArrayList<>();;
 
 }
 

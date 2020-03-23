@@ -8,9 +8,9 @@ public class AnswerLoginDto
 {
     boolean result = true;
 
+    UserLoginDto user;
+
     public AnswerLoginDto(UserLoginDto user) {
         this.user = user;
     }
-
-    UserLoginDto user;
 }

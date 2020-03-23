@@ -13,7 +13,7 @@ public interface UserService
 
     User findById(Integer id);
 
-    AnswerLoginDto findByEmailAndPassword(String email, String password, HttpSession session);
+    AnswerLoginDto login(String email, String password, HttpSession session);
 
     AnswerLoginDto findBySession(String sessionId);
 

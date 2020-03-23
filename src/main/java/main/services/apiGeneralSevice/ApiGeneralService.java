@@ -1,6 +1,6 @@
 package main.services.apiGeneralSevice;
 
-import main.DTOEntity.AllStatisticsBlogDto;
+import main.DTOEntity.StatisticsBlogDto;
 import main.DTOEntity.CalendarDto;
 import main.DTOEntity.InitDto;
 import main.DTOEntity.ListTagsDto;
@@ -17,9 +17,7 @@ public interface ApiGeneralService
 
     CalendarDto getAllPostByCalendar(Integer year);
 
-    AllStatisticsBlogDto getAllStatistics();
+    StatisticsBlogDto getAllStatistics();
 
-    List<GlobalSettings> getGlobalSettings();
-
-    String loadFile(MultipartFile file);
+    String loadFile(byte[] file);
 }
