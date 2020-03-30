@@ -33,9 +33,9 @@ public class ApiAuthController
         return captchaService.captcha();
     }
 
+
     @PostMapping(value = "/register")
     public ResponseEntity<?> register(@RequestBody RequestRegisterDto regDto){
-
         ErrorAnswerDto answer = userService.registerUser(regDto.getEmail(),
                                                          regDto.getPassword(),
                                                          regDto.getCaptcha(),

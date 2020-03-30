@@ -1,6 +1,7 @@
 package main.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -23,7 +24,7 @@ public class ProviderToken {
         if (tokens.containsKey(sessionId)) {
             return tokens.get(sessionId);
         }
-        return null;
+        throw new UserAuthenticationException("Token is invalid");
     }
 
    public boolean validateToken(String sessionId){

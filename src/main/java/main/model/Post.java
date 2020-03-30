@@ -75,7 +75,7 @@ public class Post
     @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)   //example
     @JoinColumn(name = "post_id")
     @Where(clause = "value = 1")
-    private List<PostVotes> likesUsers = new ArrayList<>();;
+    private List<PostVotes> likesUsers = new ArrayList<>();
 
     @Setter
     @Getter

@@ -31,14 +31,13 @@ public class ApiGeneralController
 
     @GetMapping("/init")
     public ResponseEntity<InitDto> init() {
-
         return ResponseEntity.ok(apiGeneralService.init());
     }
 
     @GetMapping(value = "/tag")
-    public ResponseEntity<ListTagsDto> tagBySearch()//@RequestParam("query") String query
+    public ResponseEntity<ListTagsDto> tagBySearch(@RequestParam(value = "query",
+            required = false, defaultValue = "") String query)
     {
-        String query = "";
         return ResponseEntity.ok(apiGeneralService.findTagsByQuery(query));
     }
 

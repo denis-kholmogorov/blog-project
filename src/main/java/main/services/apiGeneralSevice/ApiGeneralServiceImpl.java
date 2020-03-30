@@ -65,16 +65,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     @Override
     public InitDto init()
     {
-        List<String> list = null;
-        try
-        {
-            list = Files.readAllLines(Paths.get("copyright.txt"));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new InitDto(list.get(0), list.get(1), list.get(2),
-                list.get(3), list.get(4), list.get(5));
+        return new InitDto();
     }
 
     @Override
