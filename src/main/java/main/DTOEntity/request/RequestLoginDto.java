@@ -1,11 +1,14 @@
 package main.DTOEntity.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class RequestLoginDto {
 
-    String e_mail;
+    @JsonProperty(value = "e_mail")
+    String email;
 
     String password;
 }

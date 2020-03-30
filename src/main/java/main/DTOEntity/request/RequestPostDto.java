@@ -1,4 +1,4 @@
-package main.DTOEntity;
+package main.DTOEntity.request;
 
 import lombok.Data;
 import main.model.Tag;

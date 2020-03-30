@@ -20,8 +20,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -251,7 +249,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 Map<String, String> error = new HashMap<>();
                 error.put("text", "Текст комментария не задан или слишком короткий");
                     log.info("Post has length less 10 symbols ");
-                return ResponseEntity.ok(new ErrorAnswerDto(false, error));
+                return ResponseEntity.ok(new AnswerErrorDto(false, error));
             }
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
@@ -266,7 +264,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     public ResponseEntity<?> setMyProfile(RequestProfileDto profileDto, HttpSession session){
-        ErrorAnswerDto errors = new ErrorAnswerDto();
+        AnswerErrorDto errors = new AnswerErrorDto();
         if(providerToken.validateToken(session.getId())) {
             Optional<User> optional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
             if(optional.isPresent())

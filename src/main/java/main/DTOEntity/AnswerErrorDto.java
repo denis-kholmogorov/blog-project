@@ -11,11 +11,11 @@ import java.util.Map;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorAnswerDto implements AnswerDtoInterface
+public class AnswerErrorDto implements AnswerDtoInterface
 {
     @Setter
     @Getter
-    boolean result;
+    boolean result = false;
 
     @Setter
     @Getter

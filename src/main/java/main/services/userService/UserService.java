@@ -1,21 +1,23 @@
 package main.services.userService;
 
 import main.DTOEntity.AnswerDto;
-import main.DTOEntity.AnswerLoginDto;
-import main.DTOEntity.ErrorAnswerDto;
+import main.DTOEntity.response.ResponseLoginDto;
+import main.DTOEntity.AnswerErrorDto;
+import main.DTOEntity.request.RequestLoginDto;
+import main.DTOEntity.request.RequestRegisterDto;
 import main.model.User;
 
 import javax.servlet.http.HttpSession;
 
 public interface UserService
 {
-    ErrorAnswerDto registerUser(String email, String password, String captcha, String captcha_secret);
+    AnswerErrorDto registerUser(RequestRegisterDto dto);
 
     User findById(Integer id);
 
-    AnswerLoginDto login(String email, String password, HttpSession session);
+    ResponseLoginDto login(RequestLoginDto dto, HttpSession session);
 
-    AnswerLoginDto findBySession(String sessionId);
+    ResponseLoginDto findBySession(String sessionId);
 
     AnswerDto logoutUser (String sessionId);
 }

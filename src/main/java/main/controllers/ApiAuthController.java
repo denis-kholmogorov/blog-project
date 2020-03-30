@@ -6,6 +6,7 @@ import main.DTOEntity.request.RequestLoginDto;
 import main.DTOEntity.request.RequestRegisterDto;
 import main.DTOEntity.request.RequestRestoreDto;
 import main.DTOEntity.request.RequestSetPasswordDto;
+import main.DTOEntity.response.ResponseLoginDto;
 import main.services.captchaService.CaptchaServiceImpl;
 import main.services.userService.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +34,9 @@ public class ApiAuthController
         return captchaService.captcha();
     }
 
-
-    @PostMapping(value = "/register")
+    @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RequestRegisterDto regDto){
-        ErrorAnswerDto answer = userService.registerUser(regDto.getEmail(),
-                                                         regDto.getPassword(),
-                                                         regDto.getCaptcha(),
-                                                         regDto.getCaptcha_secret());
+        AnswerErrorDto answer = userService.registerUser(regDto);
         if(answer == null) return ResponseEntity.ok().body(new AnswerDto());
         return ResponseEntity.ok(answer);
     }
@@ -47,7 +44,7 @@ public class ApiAuthController
     @PostMapping(value = "/password")
     public ResponseEntity<?> setPassword(@RequestBody RequestSetPasswordDto requestDto)
     {
-        ErrorAnswerDto answerDto = userService.setPassword(requestDto);
+        AnswerErrorDto answerDto = userService.setPassword(requestDto);
         if(answerDto == null) return ResponseEntity.ok(new AnswerDto(true));
         return ResponseEntity.ok(answerDto);
     }
@@ -63,7 +60,7 @@ public class ApiAuthController
     @PostMapping(value = "/login")
     public ResponseEntity<?> login(@RequestBody RequestLoginDto loginDto, HttpSession session)
     {
-        AnswerLoginDto answer = userService.login(loginDto.getE_mail(), loginDto.getPassword(), session);
+        ResponseLoginDto answer = userService.login(loginDto, session);
         return ResponseEntity.ok(Objects.requireNonNullElseGet(answer, () -> new AnswerDto(false)));
     }
 
@@ -71,7 +68,7 @@ public class ApiAuthController
     public ResponseEntity<?> check(HttpSession httpSession){
         String session = httpSession.getId();
         log.info("Name session" + session);
-        AnswerLoginDto answer = userService.findBySession(session);
+        ResponseLoginDto answer = userService.findBySession(session);
 
             if (answer == null)
             {

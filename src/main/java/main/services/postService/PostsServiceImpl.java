@@ -1,9 +1,9 @@
 package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
-import main.CustomException.BadRequestException;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
+import main.DTOEntity.request.RequestPostDto;
 import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
@@ -246,7 +246,7 @@ public class PostsServiceImpl implements PostService {
             }else {
                 error.put("title", "Заголовок слишком короткий или его нет");
             }
-            return new ErrorAnswerDto(false, error);
+            return new AnswerErrorDto(false, error);
         }
         return null;
     }
@@ -291,7 +291,7 @@ public class PostsServiceImpl implements PostService {
             else {
                 error.put("title", "Заголовок слишком короткий или его нет");
             }
-            return new ErrorAnswerDto(false, error);
+            return new AnswerErrorDto(false, error);
         }
         return null;
     }
