@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import java.util.Objects;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class ApiAuthController
@@ -27,10 +26,8 @@ public class ApiAuthController
     @Autowired
     UserServiceImpl userService;
 
-
     @GetMapping("/captcha")
     public ResponseEntity<CaptchaDto> captcha() {
-
         return captchaService.captcha();
     }
 
@@ -41,45 +38,34 @@ public class ApiAuthController
         return ResponseEntity.ok(answer);
     }
 
-    @PostMapping(value = "/password")
-    public ResponseEntity<?> setPassword(@RequestBody RequestSetPasswordDto requestDto)
-    {
+    @PostMapping("/password")
+    public ResponseEntity<?> setPassword(@RequestBody RequestSetPasswordDto requestDto){
         AnswerErrorDto answerDto = userService.setPassword(requestDto);
         if(answerDto == null) return ResponseEntity.ok(new AnswerDto(true));
         return ResponseEntity.ok(answerDto);
     }
 
-
-    @PostMapping(value = "/restore")
+    @PostMapping("/restore")
     public ResponseEntity<AnswerDto> restore(@RequestBody RequestRestoreDto restoreDto){
-        log.info("Restore email " + restoreDto);
         AnswerDto answer =  userService.restorePassword(restoreDto);
         return ResponseEntity.ok(answer);
     }
 
-    @PostMapping(value = "/login")
-    public ResponseEntity<?> login(@RequestBody RequestLoginDto loginDto, HttpSession session)
-    {
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody RequestLoginDto loginDto, HttpSession session){
         ResponseLoginDto answer = userService.login(loginDto, session);
         return ResponseEntity.ok(Objects.requireNonNullElseGet(answer, () -> new AnswerDto(false)));
     }
 
-    @GetMapping(value = "/check")
+    @GetMapping("/check")
     public ResponseEntity<?> check(HttpSession httpSession){
         String session = httpSession.getId();
-        log.info("Name session" + session);
         ResponseLoginDto answer = userService.findBySession(session);
-
-            if (answer == null)
-            {
-                return ResponseEntity.ok(new AnswerDto(false));
-            }
-
-        log.info("Пользователь зарегистрирован");
+        if (answer == null) return ResponseEntity.ok(new AnswerDto(false));
         return ResponseEntity.ok(answer);
     }
 
-    @GetMapping(value = "/logout")
+    @GetMapping("/logout")
     public ResponseEntity<AnswerDto> logout(HttpSession session){
         return ResponseEntity.ok(userService.logoutUser(session.getId()));
     }

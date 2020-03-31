@@ -2,7 +2,9 @@ package main.services.userService;
 
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
-import main.DTOEntity.*;
+import main.DTOEntity.AnswerDto;
+import main.DTOEntity.AnswerErrorDto;
+import main.DTOEntity.UserLoginDto;
 import main.DTOEntity.request.RequestLoginDto;
 import main.DTOEntity.request.RequestRegisterDto;
 import main.DTOEntity.request.RequestRestoreDto;
@@ -23,7 +25,6 @@ import javax.servlet.http.HttpSession;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
 public class UserServiceImpl implements UserService
 {
@@ -79,28 +80,25 @@ public class UserServiceImpl implements UserService
         return errorAnswer;
     }
 
-    public User findById(Integer id)
-    {
+    public User findById(Integer id){
         Optional<User> user = userRepository.findById(id);
         if(user.isPresent()) return user.get();
         throw new BadRequestException("User not found");
-
     }
 
     @Override
-    public ResponseLoginDto login(RequestLoginDto dto, HttpSession session)
-    {
+    public ResponseLoginDto login(RequestLoginDto dto, HttpSession session){
         Optional<User> userOptional = userRepository.findByEmail(dto.getEmail());
-        if(userOptional.isEmpty())throw new BadRequestException("User not found");
-        User user = userOptional.get();
-        String userPassword = user.getPassword();
-        if(passwordEncoder.matches(dto.getPassword(), userPassword) && !providerToken.validateToken(session.getId()))
-        {
-            providerToken.createToken(session.getId(), user.getId());
-            Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
-            UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
-                                                   user.getIsModerator(), moderationCount);
-            return new ResponseLoginDto(answer);
+        if(userOptional.isPresent()) {
+            User user = userOptional.get();
+            String userPassword = user.getPassword();
+            if (passwordEncoder.matches(dto.getPassword(), userPassword) && !providerToken.validateToken(session.getId())) {
+                providerToken.createToken(session.getId(), user.getId());
+                Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
+                UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
+                        user.getIsModerator(), moderationCount);
+                return new ResponseLoginDto(answer);
+            }
         }
         return null;
     }
@@ -134,7 +132,6 @@ public class UserServiceImpl implements UserService
         String message = String.format("Для восстановления пароля перейдите по ссылке %s", link );
         emailService.send(restoreDto.getEmail(), "Password recovery", message);
         return new AnswerDto(true);
-
     }
 
     public AnswerErrorDto setPassword(RequestSetPasswordDto requestDto){

@@ -1,4 +1,4 @@
-package main.DTOEntity;
+package main.DTOEntity.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CalendarDto
+public class ResponseCalendarDto
 {
     private List<Integer> years;
 

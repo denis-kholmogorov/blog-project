@@ -104,9 +104,7 @@ public class PostsServiceImpl implements PostService {
     public PostDtoId findPostById(Integer id) {
         log.info(" запрос поста " + id);
         Post post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id).orElse(null);
-
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
         if(post != null && post.getTime().toLocalTime().isBefore(LocalDateTime.now().toLocalTime().plusMinutes(1))){
             log.info(post.getId() + " id поста");
             post.getViewCount();
@@ -116,7 +114,6 @@ public class PostsServiceImpl implements PostService {
             postDtoId.setDislikeCount(post.getDisLikesUsers().size());
             return postDtoId;
         }
-        log.warn("пост не извлечен");
         return null;
 
     }
@@ -146,7 +143,7 @@ public class PostsServiceImpl implements PostService {
             int userId = providerToken.getUserIdBySession(sessionId);
             Pageable paging = PageRequest.of((offset/limit), limit);
             String query = null;
-
+            log.info("Отрабатывает контроллера");
             switch (status) {
                 case "inactive":
                     query = "0";
@@ -348,8 +345,6 @@ public class PostsServiceImpl implements PostService {
             }
 
         }
-
-
 
 
     private PostDto convertToDTO(Post post) {

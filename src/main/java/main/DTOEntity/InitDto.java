@@ -1,30 +1,34 @@
 package main.DTOEntity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 
 @Data
+@Service
 @NoArgsConstructor
+@AllArgsConstructor
 public class InitDto
 {
-    @Value("${spring.copyright.title}")
+    @Value("${copyright.title}")
     private String title;
 
-    @Value("${spring.copyright.subtitle}")
+    @Value("${copyright.subtitle}")
     private String subtitle;
 
-    @Value("${site.copyright.phone}")
+    @Value("${copyright.phone}")
     private String phone;
 
-    @Value("${site.copyright.email}")
+    @Value("${copyright.email}")
     private String email;
 
-    @Value("${site.copyright.copyright}")
+    @Value("${copyright.copyright}")
     private String copyright;
 
-    @Value("${site.copyright.copyrightFrom}")
+    @Value("${copyright.copyrightFrom}")
     private String copyrightFrom;
-
 
 }

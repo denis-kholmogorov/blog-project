@@ -17,3 +17,9 @@ spring.mail.port: 465
 spring.mail.protocol: smtps
 mail.debug: true
 
+copyright.title: Once upon a time in Java
+copyright.subtitle: Рассказы разработчиков
+copyright.phone: +7 915 003-08-44
+copyright.email: dendiesel88@yandex.ru
+copyright.copyright: Denis Kholmogorov
+copyright.copyrightFrom: 2020
