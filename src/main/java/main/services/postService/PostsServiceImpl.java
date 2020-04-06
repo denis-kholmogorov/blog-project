@@ -338,7 +338,6 @@ public class PostsServiceImpl implements PostService {
 
         }
 
-
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
         postDto.setLikeCount(post.getLikesUsers().size());

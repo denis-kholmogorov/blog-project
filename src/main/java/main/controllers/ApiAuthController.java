@@ -10,12 +10,15 @@ import main.DTOEntity.response.ResponseLoginDto;
 import main.services.captchaService.CaptchaServiceImpl;
 import main.services.userService.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Objects;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class ApiAuthController
@@ -58,9 +61,10 @@ public class ApiAuthController
     }
 
     @GetMapping("/check")
-    public ResponseEntity<?> check(HttpSession httpSession){
-        String session = httpSession.getId();
-        ResponseLoginDto answer = userService.findBySession(session);
+    public ResponseEntity<?> check(HttpSession session){
+        log.info("Check отработал");
+        String sessionId = session.getId();
+        ResponseLoginDto answer = userService.findBySession(sessionId);
         if (answer == null) return ResponseEntity.ok(new AnswerDto(false));
         return ResponseEntity.ok(answer);
     }

@@ -15,6 +15,7 @@ import main.model.User;
 import main.repositories.CaptchaCodesRepository;
 import main.repositories.UserRepository;
 import main.security.ProviderToken;
+import main.security.UserAuthenticationException;
 import main.services.emailService.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +26,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserServiceImpl implements UserService
 {
@@ -105,19 +107,25 @@ public class UserServiceImpl implements UserService
     }
 
     @Override
-    public ResponseLoginDto findBySession(String sessionId){
-        Integer userId = providerToken.getUserIdBySession(sessionId);
-        if(userId == null) throw new BadRequestException("User not found");
-            Optional<User> userOptional = userRepository.findById(userId);
-            if(userOptional.isPresent()){
-                User user = userOptional.get();
-                Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
-                UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
-                        user.getIsModerator(), moderationCount);
-                return new ResponseLoginDto(answer);
+    public ResponseLoginDto findBySession(String sessionId) {
+        try {
+            Integer userId = providerToken.getUserIdBySession(sessionId);
+            if (userId != null) {
+                Optional<User> userOptional = userRepository.findById(userId);
+                if (userOptional.isPresent()) {
+                    User user = userOptional.get();
+                    Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
+                    UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
+                            user.getIsModerator(), moderationCount);
+                    return new ResponseLoginDto(answer);
+                }
             }
+        }catch (UserAuthenticationException e){
+            log.info(e.getMessage());
+        }
         return null;
     }
+
 
     public AnswerDto restorePassword(RequestRestoreDto restoreDto){
         Optional<User> optionalUser = userRepository.findByEmail(restoreDto.getEmail());

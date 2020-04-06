@@ -1,15 +1,11 @@
 package main.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -17,13 +13,17 @@ import javax.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public RedirectView handlerNotFound(Exception e){
+        RedirectView rv = new RedirectView("/");
+        return rv;
+    }
+
     @ExceptionHandler(RuntimeException.class)
-    public ModelAndView handleError404(HttpServletRequest request, Exception e)   {
-
-        log.info(e.getClass().getName());
-
-
-        ModelAndView mv = new ModelAndView("/");
-        return mv;
+    public RedirectView handleErrors(HttpServletRequest request, Exception e){
+        log.info(e.getClass().getName() + " Ошибка");
+        RedirectView rv = new RedirectView("/");
+        return rv;
     }
 }
