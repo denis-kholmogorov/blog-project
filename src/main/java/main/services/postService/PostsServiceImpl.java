@@ -143,7 +143,6 @@ public class PostsServiceImpl implements PostService {
             int userId = providerToken.getUserIdBySession(sessionId);
             Pageable paging = PageRequest.of((offset/limit), limit);
             String query = null;
-            log.info("Отрабатывает контроллера");
             switch (status) {
                 case "inactive":
                     query = "0";
@@ -158,7 +157,6 @@ public class PostsServiceImpl implements PostService {
                     query = "1 and moderationStatus = ACCEPTED";
                     break;
             }
-            log.info("запрос пользователя к своим записям под id " + userId);
             Page<Post> page = postRepository.findMyPosts(userId, query, paging);
             List<MyPostDto> myPosts = page
                     .stream()
@@ -214,14 +212,12 @@ public class PostsServiceImpl implements PostService {
                     Post post = new Post();
                     post.setUser(userRepository.findById(userId).get());
                     post.setIsActive(postDto.getActive());
-                    log.info(postDto.getActive() + " активность поста");
                     post.setTime(time);
                     post.setText(postDto.getText());
                     post.setTitle(postDto.getTitle());
                     post.setViewCount(0);
                     post.setModerationStatus(ModerationStatus.NEW);
                     Post p = postRepository.save(post);
-                    log.info(p.getId() + " id сохраняемого поста");
                     postDto.getTags().forEach(t ->{
                         Tag tag = tagRepository.findByName(t).orElse(null);
                         if(tag != null) {
@@ -277,7 +273,6 @@ public class PostsServiceImpl implements PostService {
                             tagToPostRepository.save(tp);
                             log.info(tag.getName());
                         }
-                        else {log.info("Tag not fount");}
                     });
                     return new AnswerDto(true);
                 }
@@ -304,7 +299,6 @@ public class PostsServiceImpl implements PostService {
                     .time(LocalDateTime.now())
                     .value((short) 1)
                     .build();
-            log.info("Like сохранен от пользователя " + userId + " пост " + likeDto.getPostId());
             postVotesRepository.save(postVotes);
             post.getLikesUsers().add(postVotes);
             return new AnswerDto(true);
@@ -323,7 +317,6 @@ public class PostsServiceImpl implements PostService {
             PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
             Post post = postRepository.findById(likeDto.getPostId()).get();
             if (votes == null) {
-                log.info(LocalDateTime.now() + "");
                 PostVotes postVotes = PostVotes.builder()
                         .postId(likeDto.getPostId())
                         .userId(userId)
@@ -336,7 +329,6 @@ public class PostsServiceImpl implements PostService {
             }
 
             if (votes.getValue() == (short) -1) {
-                log.info("dislike уже существует " + userId + " пост " + likeDto.getPostId());
                 return new AnswerDto(false);
             } else{
                 votes.setValue((short) -1);
@@ -349,13 +341,10 @@ public class PostsServiceImpl implements PostService {
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
-        log.info(post.getLikesUsers().size() + " лайков записан в бд like ");
         postDto.setLikeCount(post.getLikesUsers().size());
-        log.info(post.getDisLikesUsers().size() + " диздайков записан в бд like ");
         postDto.setDislikeCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
         postDto.setCommentCounts(post.getComments().size());
-        log.info(postDto.toString());
         return postDto;
     }
 }

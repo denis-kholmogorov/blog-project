@@ -66,6 +66,7 @@ public class UserServiceImpl implements UserService
                     user.setIsModerator((byte) 0);
                     user.setPassword(passwordEncoder.encode(dto.getPassword()));
                     user.setName("User");
+                    user.setPhoto("default.jpg");
                     user.setEmail(dto.getEmail());
                     userRepository.save(user);
                     return null;

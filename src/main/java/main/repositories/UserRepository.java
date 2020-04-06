@@ -20,4 +20,6 @@ public interface UserRepository extends CrudRepository<User, Integer>
     Integer findCountModerationPostsById(Integer id);
 
     Optional<User> findByCode(String code);
+
+    Boolean existsByEmail(String email);
 }

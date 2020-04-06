@@ -34,7 +34,7 @@ public class ApiAuthController
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RequestRegisterDto regDto){
         AnswerErrorDto answer = userService.registerUser(regDto);
-        if(answer == null) return ResponseEntity.ok().body(new AnswerDto());
+        if(answer == null) return ResponseEntity.ok().body(new AnswerDto(true));
         return ResponseEntity.ok(answer);
     }
 

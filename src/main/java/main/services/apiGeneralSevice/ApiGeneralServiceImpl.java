@@ -280,16 +280,21 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 return ResponseEntity.ok(errors);
             }
 
-            if(profileDto.getName().matches("\\w+") && profileDto.getName().length() > 2){
+            if(profileDto.getName().matches("\\w+.?\\w+") && profileDto.getName().length() > 2){
                 user.setName(profileDto.getName());
             }else {
                 errors.getErrors().put("name","Имя указано неверно");
             }
 
             if(profileDto.getEmail() != null) {
-                if (userRepository.findByEmail(profileDto.getEmail()).isEmpty()) {
+                String emailUser = null;
+
+                if (userRepository.existsByEmail(profileDto.getEmail())) {
                     user.setEmail(profileDto.getEmail());
-                } else if (!profileDto.getEmail().isEmpty() && profileDto.getEmail().length() > 1) {
+                }
+                else if (user.getEmail().equals(profileDto.getEmail())){
+                    log.info("Email " + profileDto.getEmail() + " не изменен");
+                }else{
                     errors.getErrors().put("email", "Этот e-mail уже зарегистрирован");
                     return ResponseEntity.ok(errors);
                 }
@@ -318,13 +323,12 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     public String loadAvatar(byte[] image) throws IOException {
 
         String path = "src/main/resources/static/img/";
-        String imageName = "avatar";
+        String imageName = "avatar.087cb69a";
         String pathImage = path + imageName + ".jpg";
-        log.info(pathImage + " путь файла");
         ByteArrayInputStream bais = new ByteArrayInputStream(image);
         BufferedImage bi = ImageIO.read(bais);
         ImageIO.write(bi, "jpg", new File(pathImage));
-        return imageName + ".087cb69a.jpg";
+        return "avatar.jpg";
 
     }
 }
