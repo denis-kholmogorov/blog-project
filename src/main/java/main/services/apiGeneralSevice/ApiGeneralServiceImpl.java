@@ -168,11 +168,6 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     public boolean setSettings(Map<String, Boolean> settings, String sessionId){
-        log.info((userRepository.findById(providerToken.getUserIdBySession(sessionId))
-                .get()
-                .getIsModerator() == (byte)1) + " найден модератор");
-        log.info(providerToken.validateToken(sessionId) + " прошел валидацию");
-
         if(providerToken.validateToken(sessionId) &&
                 userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
         {
