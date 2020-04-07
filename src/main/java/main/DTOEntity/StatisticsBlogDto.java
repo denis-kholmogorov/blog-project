@@ -24,7 +24,7 @@ public class StatisticsBlogDto
 
     //@JsonProperty(value = "Первая публикация")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
-    LocalDateTime firstPublication = null;
+    Calendar firstPublication = null;
 
     public StatisticsBlogDto(List<Post> posts)
     {
@@ -38,7 +38,7 @@ public class StatisticsBlogDto
             {
                 this.firstPublication = post.getTime();
             }
-            if(this.firstPublication.isAfter(post.getTime()))
+            if(this.firstPublication.after(post.getTime()));
             {
                 this.firstPublication = post.getTime();
             }

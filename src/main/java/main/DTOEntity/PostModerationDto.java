@@ -14,7 +14,7 @@ public class PostModerationDto implements PostDtoInterface
     private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm:ss")
-    private LocalDateTime time;
+    private Calendar time;
 
     private UserDto user;
 

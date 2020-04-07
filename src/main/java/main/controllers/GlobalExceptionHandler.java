@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 
-    @ExceptionHandler(NoHandlerFoundException.class)
+
     public RedirectView handlerNotFound(Exception e){
         RedirectView rv = new RedirectView("/");
         return rv;

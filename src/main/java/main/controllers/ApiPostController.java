@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.text.ParseException;
 
 @Slf4j
 @RestController
@@ -56,9 +57,9 @@ public class ApiPostController
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity<?> postById(@PathVariable("id") Integer id)
+    public ResponseEntity<?> postById(@PathVariable("id") Integer id, HttpSession session)
     {
-        PostDtoId post = postsServiceImpl.findPostById(id);
+        PostDtoId post = postsServiceImpl.findPostById(id, session);
         if(post != null) {
             return ResponseEntity.ok(post);
         }
@@ -96,7 +97,7 @@ public class ApiPostController
     }
 
     @PostMapping()
-    public ResponseEntity<?> createPost(@RequestBody RequestPostDto post, HttpSession session){
+    public ResponseEntity<?> createPost(@RequestBody RequestPostDto post, HttpSession session) throws ParseException {
 
         AnswerDtoInterface answer = postsServiceImpl.createPost(post, session.getId());
         if(answer != null){
@@ -106,7 +107,7 @@ public class ApiPostController
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<?> changePost(@RequestBody RequestPostDto postDto, @PathVariable("id") Integer id, HttpSession session){
+    public ResponseEntity<?> changePost(@RequestBody RequestPostDto postDto, @PathVariable("id") Integer id, HttpSession session) throws ParseException {
         AnswerDtoInterface answer = postsServiceImpl.changePost(id, postDto, session.getId());
         if(answer != null){
             return ResponseEntity.ok(answer);

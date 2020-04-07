@@ -289,7 +289,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             if(profileDto.getEmail() != null) {
                 String emailUser = null;
 
-                if (userRepository.existsByEmail(profileDto.getEmail())) {
+                if (!userRepository.existsByEmail(profileDto.getEmail())) {
                     user.setEmail(profileDto.getEmail());
                 }
                 else if (user.getEmail().equals(profileDto.getEmail())){

@@ -1,6 +1,7 @@
 package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
+import main.CustomException.BadRequestException;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 import main.DTOEntity.request.RequestPostDto;
@@ -16,6 +17,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -101,17 +104,25 @@ public class PostsServiceImpl implements PostService {
     }
 
 
-    public PostDtoId findPostById(Integer id) {
+    public PostDtoId findPostById(Integer id, HttpSession session) {
         log.info(" запрос поста " + id);
-        Post post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id).orElse(null);
+
+        Post post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id).orElseThrow(BadRequestException::new);
+        if(providerToken.validateToken(session.getId())) {
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+        }
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        if(post != null && post.getTime().toLocalTime().isBefore(LocalDateTime.now().toLocalTime().plusMinutes(1))){
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.MINUTE, 1);
+        if(post != null && post.getTime().before(now)){
             log.info(post.getId() + " id поста");
             post.getViewCount();
             PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
             postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
             postDtoId.setLikeCount(post.getLikesUsers().size());
             postDtoId.setDislikeCount(post.getDisLikesUsers().size());
+
             return postDtoId;
         }
         return null;
@@ -196,14 +207,17 @@ public class PostsServiceImpl implements PostService {
         return null;
     }
 
-    public AnswerDtoInterface createPost(RequestPostDto postDto, String session){
+    public AnswerDtoInterface createPost(RequestPostDto postDto, String session) throws ParseException {
         if(providerToken.validateToken(session)){
-            LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T"," "),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-
-            log.info(time.toLocalTime().isBefore(LocalDateTime.now().toLocalTime())+" время установленное постом");
-            if(time.toLocalTime().isBefore(LocalDateTime.now().plusMinutes(1).toLocalTime())) {
-                time = LocalDateTime.now();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String formatTime = postDto.getTime().replace("T"," ");
+            Calendar time = Calendar.getInstance();
+            time.setTime(sdf.parse(formatTime));
+            Calendar now = Calendar.getInstance();
+            now.add(Calendar.MINUTE, 1);
+            log.info(time.toString() + " время установленное постом");
+            if(time.before(now)) {
+                time = Calendar.getInstance();
             }
             Map<String, String> error = new HashMap<>();
             if(postDto.getTitle().length() >= 10){
@@ -244,16 +258,19 @@ public class PostsServiceImpl implements PostService {
         return null;
     }
 
-    public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session){
+    public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session) throws ParseException {
         if(providerToken.validateToken(session)) {
             log.info(postDto.getTime());
             Post post = postRepository.findById(id).get();
-            LocalDateTime time = LocalDateTime.parse(postDto.getTime().replace("T", " "),
-                    DateTimeFormatter.ofPattern("yyyy-dd-MM HH:mm"));
-
-            log.info(time.toLocalTime().isAfter(LocalDateTime.now().toLocalTime()) + " время установленное постом");
-            if (time.toLocalTime().isBefore(LocalDateTime.now().minusMinutes(1).toLocalTime())) {
-                time = LocalDateTime.now();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String formatTime = postDto.getTime().replace("T"," ");
+            Calendar time = Calendar.getInstance();
+            time.setTime(sdf.parse(formatTime));
+            Calendar now = Calendar.getInstance();
+            now.add(Calendar.MINUTE, 1);
+            log.info(time.toString() + " время установленное постом");
+            if(time.before(now)) {
+                time = Calendar.getInstance();
             }
             Map<String, String> error = new HashMap<>();
             if (postDto.getTitle().length() >= 10) {
