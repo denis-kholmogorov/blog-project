@@ -29,7 +29,7 @@ public class PostDto implements PostDtoInterface {
 
     private Integer dislikeCount;
 
-    private Integer commentCounts;
+    private Integer commentCount;
 
     private Integer viewCount;
 

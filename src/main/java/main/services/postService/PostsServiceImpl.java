@@ -360,7 +360,7 @@ public class PostsServiceImpl implements PostService {
         postDto.setLikeCount(post.getLikesUsers().size());
         postDto.setDislikeCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
-        postDto.setCommentCounts(post.getComments().size());
+        postDto.setCommentCount(post.getComments().size());
         return postDto;
     }
 }

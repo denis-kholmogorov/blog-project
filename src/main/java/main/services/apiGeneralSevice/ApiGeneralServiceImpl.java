@@ -240,7 +240,10 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                     }else{
                         log.info("Юзер ненайден");
                     }
+                    log.info(comment.getId() + "");
                     Integer commentId = commentsRepository.save(comment).getId();
+                    log.info(post.getComments().size() + " количество комментаариев");
+
                     log.info("New comment has been added with id " + commentId);
                     return ResponseEntity.ok(new AnswerComentDto(commentId));
 
