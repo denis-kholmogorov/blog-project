@@ -94,9 +94,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         Map<String, Integer> map = new HashMap<>();
         List<Integer> allYearsWithPosts = postRepository.findAllYearWithPosts();
         ResponseCalendarDto responseCalendarDto = new ResponseCalendarDto();
-        if (year == null) {
-            year = LocalDateTime.now().getYear();
-        }
+        if (year == null)  year = LocalDateTime.now().getYear();
         listDateAndCount = postRepository.findCountPostForCalendar(year);
         listDateAndCount.forEach(s->{
             int a = s.indexOf(',');
@@ -112,7 +110,6 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     {
         return new StatisticsBlogDto(postRepository.findAllStatistics());
     }
-
 
     public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findByCode("STATISTICS_IS_PUBLIC");}
 
@@ -154,22 +151,17 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     public Map<String, Boolean> getSettings(String sessionId){
-        log.info("Работаем внутри getsettings");
-        if(providerToken.validateToken(sessionId) &&
-                userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
-        {
 
+        if(userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
+        {
             Map<String, Boolean> settings = globalSettingsRepository.findOnlyCodeAndValue();
-            log.info("Получил настройки " + settings.size());
             return settings;
         }
-        log.info("не отработал get_settings");
-        return null;
+        throw new BadRequestException("Юзер не является модератором");
     }
 
     public boolean setSettings(Map<String, Boolean> settings, String sessionId){
-        if(providerToken.validateToken(sessionId) &&
-                userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
+        if(userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte)1)
         {
             List<GlobalSettings> listSettingsFromBD = globalSettingsRepository.findAllSettings();
             log.info(listSettingsFromBD.size() + " size list settings");
@@ -185,82 +177,59 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             globalSettingsRepository.saveAll(listSettingsFromBD);
             return true;
         }
-        return false;
+        throw new BadRequestException("Юзер не является модератором");
     }
 
     public AnswerDto setModerationDecision(ModerationDecisionDto decision, String session){
-        if(providerToken.validateToken(session)){
-            Optional<User> optionalUser = userRepository.findById(providerToken.getUserIdBySession(session));
-            if(optionalUser.isEmpty()){
-                return new AnswerDto(false);
+        Optional<User> optionalUser = userRepository.findById(providerToken.getUserIdBySession(session));
+        User user = optionalUser.get();
+        if(user.getIsModerator() == 1){
+            Post post = postRepository.findById(decision.getPost_id()).orElse(null);
+            if(post != null && decision.getDecision().toLowerCase().equals("accept")){
+                post.setModerationStatus(ModerationStatus.ACCEPTED);
+                post.setModeratorId(user.getId());
             }
-            User user = optionalUser.get();
-            if(user.getIsModerator() == 1){
-                Post post = postRepository.findById(decision.getPost_id()).orElse(null);
-                if(post != null && decision.getDecision().toLowerCase().equals("accept")){
-                    post.setModerationStatus(ModerationStatus.ACCEPTED);
-                    post.setModeratorId(user.getId());
-                }
-                else if(post != null && decision.getDecision().toLowerCase().equals("decline")){
-                    post.setModerationStatus(ModerationStatus.DECLINED);
-                    post.setModeratorId(user.getId());
-                }
-                assert post != null;
-                postRepository.save(post);
-                log.info(post.getModeratorId() + " " + post.getModerationStatus());
+            else if(post != null && decision.getDecision().toLowerCase().equals("decline")){
+                post.setModerationStatus(ModerationStatus.DECLINED);
+                post.setModeratorId(user.getId());
             }
+            assert post != null;
+            postRepository.save(post);
+            log.info(post.getModeratorId() + " " + post.getModerationStatus());
         }
         return new AnswerDto(true);
     }
 
     public ResponseEntity<?> setComment(RequestCommentsDto commentDto, HttpSession session){
-        if(providerToken.validateToken(session.getId())) {
-            if (commentDto.getText().length() > 10)
+        providerToken.getUserIdBySession(session.getId());
+        if (commentDto.getText().length() > 10)
+        {
+            Post post = postRepository.findById(commentDto.getPostId()).orElse(null);
+            if(post == null) throw new BadRequestException("Пост не найден");
+            PostComments comment = new PostComments();
+            comment.setComment(commentDto.getText());
+            comment.setPost(post);
+            if(commentDto.getParentId() != null)
             {
-                Post post = postRepository.findById(commentDto.getPostId()).orElse(null);
-                if (post != null)
-                {
-                    PostComments comment = new PostComments();
-                    comment.setComment(commentDto.getText());
-                    comment.setPost(post);
-                    if(commentDto.getParentId() != null)
-                    {
-                        User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
-                        if(parentUser == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-                        comment.setParentId(commentDto.getParentId());
-                    }
-                    Optional<User> userOptional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
-                    if(userOptional.isPresent()){
-                        comment.setUser(userOptional.get());
-                    }else{
-                        log.info("Юзер ненайден");
-                    }
-                    log.info(comment.getId() + "");
-                    Integer commentId = commentsRepository.save(comment).getId();
-                    log.info(post.getComments().size() + " количество комментаариев");
-
-                    log.info("New comment has been added with id " + commentId);
-                    return ResponseEntity.ok(new AnswerComentDto(commentId));
-
-                }
-                else return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
+                if(parentUser == null) throw new BadRequestException("Юзер не найден");
+                comment.setParentId(commentDto.getParentId());
             }
-            else
-                {
-                Map<String, String> error = new HashMap<>();
-                error.put("text", "Текст комментария не задан или слишком короткий");
-                return ResponseEntity.ok(new AnswerErrorDto(false, error));
-            }
+            Optional<User> userOptional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+            Integer commentId = commentsRepository.save(comment).getId();
+            return ResponseEntity.ok(new AnswerComentDto(commentId));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        else
+            {
+            Map<String, String> error = new HashMap<>();
+            error.put("text", "Текст комментария не задан или слишком короткий");
+            return ResponseEntity.ok(new AnswerErrorDto(false, error));
+        }
     }
     
     public StatisticsBlogDto getMyStatistics (String sessionId){
-        if(providerToken.validateToken(sessionId)){
-            Integer userId = providerToken.getUserIdBySession(sessionId);
-           return new StatisticsBlogDto(postRepository.findAllStatisticsById(userId));
-        }
-        return null;
+        Integer userId = providerToken.getUserIdBySession(sessionId);
+        return new StatisticsBlogDto(postRepository.findAllStatisticsById(userId));
     }
 
     public ResponseEntity<?> setMyProfile(RequestProfileDto profileDto, HttpSession session){

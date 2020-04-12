@@ -106,27 +106,25 @@ public class PostsServiceImpl implements PostService {
 
     public PostDtoId findPostById(Integer id, HttpSession session) {
         log.info(" запрос поста " + id);
+        User user = userRepository.findById(providerToken.getUserIdBySession(session.getId())).orElseThrow(BadRequestException::new);
+        Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
 
-        Post post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id).orElseThrow(BadRequestException::new);
-        if(providerToken.validateToken(session.getId())) {
+        if (providerToken.validateToken(session.getId()) && !user.getPostsSet().contains(post)) {
             post.setViewCount(post.getViewCount() + 1);
             postRepository.save(post);
         }
+
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Calendar now = Calendar.getInstance();
         now.add(Calendar.MINUTE, 1);
-        if(post != null && post.getTime().before(now)){
-            log.info(post.getId() + " id поста");
-            post.getViewCount();
-            PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
-            postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
-            postDtoId.setLikeCount(post.getLikesUsers().size());
-            postDtoId.setDislikeCount(post.getDisLikesUsers().size());
+        log.info(post.getId() + " id поста");
+        post.getViewCount();
+        PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
+        postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
+        postDtoId.setLikeCount(post.getLikesUsers().size());
+        postDtoId.setDislikeCount(post.getDisLikesUsers().size());
 
-            return postDtoId;
-        }
-        return null;
-
+        return postDtoId;
     }
 
     @Override
@@ -153,22 +151,32 @@ public class PostsServiceImpl implements PostService {
         if(providerToken.validateToken(sessionId)){
             int userId = providerToken.getUserIdBySession(sessionId);
             Pageable paging = PageRequest.of((offset/limit), limit);
-            String query = null;
+            Page<Post> page = null;
+            byte isActive = 0;
+            ModerationStatus moderationStatus = null;
             switch (status) {
                 case "inactive":
-                    query = "0";
+                    isActive = (byte)0;
                     break;
                 case "pending":
-                    query = "1 and moderationStatus = NEW";
+                    isActive = (byte)1;
+                    moderationStatus = ModerationStatus.NEW;
                     break;
                 case "declined":
-                    query = "1 and moderationStatus = DECLINED";
+                    isActive = (byte)1;
+                    moderationStatus = ModerationStatus.DECLINED;
                     break;
                 case "published":
-                    query = "1 and moderationStatus = ACCEPTED";
+                    isActive = (byte)1;
+                    moderationStatus = ModerationStatus.ACCEPTED;
                     break;
             }
-            Page<Post> page = postRepository.findMyPosts(userId, query, paging);
+            if(moderationStatus == null) {
+                 page = postRepository.findMyPosts(userId, isActive, paging);
+            }
+            else {
+                page = postRepository.findMyPosts(userId, isActive, moderationStatus, paging);
+            }
             List<MyPostDto> myPosts = page
                     .stream()
                     .map(p->new MyPostDto(p))
@@ -208,54 +216,53 @@ public class PostsServiceImpl implements PostService {
     }
 
     public AnswerDtoInterface createPost(RequestPostDto postDto, String session) throws ParseException {
-        if(providerToken.validateToken(session)){
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-            String formatTime = postDto.getTime().replace("T"," ");
-            Calendar time = Calendar.getInstance();
-            time.setTime(sdf.parse(formatTime));
-            Calendar now = Calendar.getInstance();
-            now.add(Calendar.MINUTE, 1);
-            log.info(time.toString() + " время установленное постом");
-            if(time.before(now)) {
-                time = Calendar.getInstance();
-            }
-            Map<String, String> error = new HashMap<>();
-            if(postDto.getTitle().length() >= 10){
-                if(postDto.getText().length() >= 5){
-                    Integer userId = providerToken.getUserIdBySession(session);
-                    Post post = new Post();
-                    post.setUser(userRepository.findById(userId).get());
-                    post.setIsActive(postDto.getActive());
-                    post.setTime(time);
-                    post.setText(postDto.getText());
-                    post.setTitle(postDto.getTitle());
-                    post.setViewCount(0);
-                    post.setModerationStatus(ModerationStatus.NEW);
-                    Post p = postRepository.save(post);
-                    postDto.getTags().forEach(t ->{
-                        Tag tag = tagRepository.findByName(t).orElse(null);
-                        if(tag != null) {
-                            TagToPost tp = new TagToPost();
-                            tp.setTag_id(tag.getId());
-                            tp.setPost_id(post.getId());
-                            tp.setId((int) tagToPostRepository.count() + 1);
-                            tagToPostRepository.save(tp);
-                            log.info(tag.getName());
-                        }
-                        else {log.info("Tag not fount");}
-                    });
+        providerToken.validateToken(session);
 
-                    return new AnswerDto(true);
-                }
-                else {
-                    error.put("text", "Текст публикации слишком короткий");
-                }
-            }else {
-                error.put("title", "Заголовок слишком короткий или его нет");
-            }
-            return new AnswerErrorDto(false, error);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String formatTime = postDto.getTime().replace("T"," ");
+        Calendar time = Calendar.getInstance();
+        time.setTime(sdf.parse(formatTime));
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.MINUTE, 1);
+        log.info(time.toString() + " время установленное постом");
+        if(time.before(now)) {
+            time = Calendar.getInstance();
         }
-        return null;
+        Map<String, String> error = new HashMap<>();
+        if(postDto.getTitle().length() >= 10){
+            if(postDto.getText().length() >= 5){
+                Integer userId = providerToken.getUserIdBySession(session);
+                Post post = new Post();
+                post.setUser(userRepository.findById(userId).get());
+                post.setIsActive(postDto.getActive());
+                post.setTime(time);
+                post.setText(postDto.getText());
+                post.setTitle(postDto.getTitle());
+                post.setViewCount(0);
+                post.setModerationStatus(ModerationStatus.NEW);
+                Post p = postRepository.save(post);
+                postDto.getTags().forEach(t ->{
+                    Tag tag = tagRepository.findByName(t).orElse(null);
+                    if(tag != null) {
+                        TagToPost tp = new TagToPost();
+                        tp.setTag_id(tag.getId());
+                        tp.setPost_id(post.getId());
+                        tp.setId((int) tagToPostRepository.count() + 1);
+                        tagToPostRepository.save(tp);
+                        log.info(tag.getName());
+                    }
+                    else {log.info("Tag not fount");}
+                });
+
+                return new AnswerDto(true);
+            }
+            else {
+                error.put("text", "Текст публикации слишком короткий");
+            }
+        }else {
+            error.put("title", "Заголовок слишком короткий или его нет");
+        }
+        return new AnswerErrorDto(false, error);
     }
 
     public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session) throws ParseException {

@@ -108,7 +108,6 @@ public class UserServiceImpl implements UserService
 
     @Override
     public ResponseLoginDto findBySession(String sessionId) {
-        try {
             Integer userId = providerToken.getUserIdBySession(sessionId);
             if (userId != null) {
                 Optional<User> userOptional = userRepository.findById(userId);
@@ -120,9 +119,6 @@ public class UserServiceImpl implements UserService
                     return new ResponseLoginDto(answer);
                 }
             }
-        }catch (UserAuthenticationException e){
-            log.info(e.getMessage());
-        }
         return null;
     }
 

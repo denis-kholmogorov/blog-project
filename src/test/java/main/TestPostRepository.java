@@ -46,7 +46,7 @@ public class TestPostRepository
     public void testFindAllPostById()
     {
         int id = 1;
-        Optional<Post> post = postRepository.findPostById((byte) 1, ModerationStatus.ACCEPTED, id);
+        Optional<Post> post = postRepository.findByIdAndIsActiveAndModerationStatus(id, (byte) 1, ModerationStatus.ACCEPTED);
         assertEquals(1, (int)post.get().getId());
         assertEquals("post of admin", post.get().getText());
     }

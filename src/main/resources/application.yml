@@ -5,7 +5,6 @@ spring.datasource.password: 23019088
 spring.jpa.hibernate.ddl-auto:
 spring.main.allow-bean-definition-overriding: true
 intervalCountTime: 1
-dispatcherServlet.setThrowExceptionIfNoHandlerFound: true
 
 spring.security.user.name: admin
 spring.security.user.password: 12345

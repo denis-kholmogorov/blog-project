@@ -62,7 +62,6 @@ public class ApiAuthController
 
     @GetMapping("/check")
     public ResponseEntity<?> check(HttpSession session){
-        log.info("Check отработал");
         String sessionId = session.getId();
         ResponseLoginDto answer = userService.findBySession(sessionId);
         if (answer == null) return ResponseEntity.ok(new AnswerDto(false));

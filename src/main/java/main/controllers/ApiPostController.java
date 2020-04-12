@@ -60,6 +60,7 @@ public class ApiPostController
     public ResponseEntity<?> postById(@PathVariable("id") Integer id, HttpSession session)
     {
         PostDtoId post = postsServiceImpl.findPostById(id, session);
+
         if(post != null) {
             return ResponseEntity.ok(post);
         }

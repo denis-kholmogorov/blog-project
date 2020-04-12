@@ -28,14 +28,10 @@ public class ProviderToken {
     }
 
    public boolean validateToken(String sessionId){
-        try{
-            if(tokens.containsKey(sessionId)){
-                return true;
-            }
-            return false;
-        }catch (UserAuthenticationException e){
-            throw new UserAuthenticationException("Token is invalid");
+        if(tokens.containsKey(sessionId)){
+            return true;
         }
+        return false;
     }
 
     public boolean deleteToken(String sessionId){

@@ -8,6 +8,7 @@ import main.DTOEntity.request.RequestProfileWithPhotoDto;
 import main.DTOEntity.response.ResponseCalendarDto;
 import main.model.GlobalSettings;
 import main.security.ProviderToken;
+import main.security.UserAuthenticationException;
 import main.services.apiGeneralSevice.ApiGeneralServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,7 +30,6 @@ public class ApiGeneralController
 
     @Autowired
     ProviderToken providerToken;
-    
 
     @GetMapping("/init")
     public ResponseEntity<InitDto> init() {
@@ -52,20 +53,16 @@ public class ApiGeneralController
 
         Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
         if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            throw new UserAuthenticationException("Запрещен доступ к статистике");
         }
-        else {
-            StatisticsBlogDto allStat = apiGeneralService.getAllStatistics();
-            log.info("Показываем общую статистику");
-            return ResponseEntity.ok(allStat);
-        }
+        StatisticsBlogDto allStat = apiGeneralService.getAllStatistics();
+        return ResponseEntity.ok(allStat);
     }
 
     @GetMapping(value = "/statistics/my")
-    public ResponseEntity<?> getMyStatistics(HttpSession httpSession){
+    public ResponseEntity<?> getMyStatistics(HttpSession httpSession) {
         StatisticsBlogDto dto = apiGeneralService.getMyStatistics(httpSession.getId());
-        if(dto!=null) return ResponseEntity.ok(dto);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping(value = "/image")
@@ -81,7 +78,6 @@ public class ApiGeneralController
     @GetMapping(value = "/settings")
     public ResponseEntity<?> getGlobalSettings(HttpSession httpSession)
     {
-        log.info("Зашли в настройки get_mapping");
         Map<String, Boolean> settings = apiGeneralService.getSettings(httpSession.getId());
         return ResponseEntity.ok(settings);
     }
@@ -93,10 +89,9 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "/moderation")
-    public ResponseEntity<?> setModerationAction(@RequestBody ModerationDecisionDto decision, HttpSession session){
-        log.info(decision.getDecision() + "  " + decision.getPost_id());
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void setModerationAction(@RequestBody ModerationDecisionDto decision, HttpSession session){
         apiGeneralService.setModerationDecision(decision, session.getId());
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(null);
     }
 
     @PostMapping(value = "/comment")

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -35,16 +36,6 @@ public class Main
         return new BCryptPasswordEncoder();
     }
 
-    @Bean(name = DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
-    public DispatcherServlet dispatcherServlet() {
-        DispatcherServlet ds = new DispatcherServlet();
-        ds.setDetectAllHandlerAdapters(true);
-        ds.setDetectAllHandlerExceptionResolvers(true);
-        ds.setDetectAllHandlerMappings(true);
-        ds.setDetectAllViewResolvers(true);
-        ds.setThrowExceptionIfNoHandlerFound(true);
-        return ds;
-    }
 }
 
 
