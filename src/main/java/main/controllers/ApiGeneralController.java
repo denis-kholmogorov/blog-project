@@ -14,8 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.Optional;
@@ -50,7 +52,6 @@ public class ApiGeneralController
 
     @GetMapping(value = "/statistics/all")
     public ResponseEntity<?> getAllStatistics(HttpSession httpSession){
-
         Optional<GlobalSettings> settings = apiGeneralService.getSettingIsPublic();
         if(!settings.get().isValue() && !providerToken.validateToken(httpSession.getId())) {
             throw new UserAuthenticationException("Запрещен доступ к статистике");
@@ -66,9 +67,8 @@ public class ApiGeneralController
     }
 
     @PostMapping(value = "/image")
-    public ResponseEntity<?> uploadImage(@RequestBody byte[] image)
-    {
-        String answer = apiGeneralService.loadFile(image);
+    public ResponseEntity<?> uploadImage(@RequestBody MultipartFile image) throws IOException {
+        String answer = apiGeneralService.loadFile(image.getBytes());
         if(answer != null){
             return ResponseEntity.ok(answer);
         }

@@ -7,6 +7,7 @@ import main.DTOEntity.request.RequestRegisterDto;
 import main.DTOEntity.request.RequestRestoreDto;
 import main.DTOEntity.request.RequestSetPasswordDto;
 import main.DTOEntity.response.ResponseLoginDto;
+import main.security.UserAuthenticationException;
 import main.services.captchaService.CaptchaServiceImpl;
 import main.services.userService.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +64,12 @@ public class ApiAuthController
     @GetMapping("/check")
     public ResponseEntity<?> check(HttpSession session){
         String sessionId = session.getId();
-        ResponseLoginDto answer = userService.findBySession(sessionId);
-        if (answer == null) return ResponseEntity.ok(new AnswerDto(false));
-        return ResponseEntity.ok(answer);
+        try {
+            ResponseLoginDto answer = userService.findBySession(sessionId);
+            return ResponseEntity.ok(answer);
+        }catch (UserAuthenticationException e){
+            return ResponseEntity.ok(new AnswerDto(false));
+        }
     }
 
     @GetMapping("/logout")

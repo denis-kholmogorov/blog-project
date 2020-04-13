@@ -79,10 +79,12 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     {
         String query = queryParam.toLowerCase();
         List<TagDto> list = tagRepository.findAllTagWithWeight((byte) 1, ModerationStatus.ACCEPTED);
-        double maxWeight = list.get(0).getWeight();
-        list.forEach(tagDto -> tagDto.setWeight(tagDto.getWeight()/maxWeight));
-        if(!query.isEmpty()){
-            list = list.stream().filter(t-> t.getName().toLowerCase().contains(query)).collect(Collectors.toList());
+        if(list.size()>0) {
+            double maxWeight = list.get(0).getWeight();
+            list.forEach(tagDto -> tagDto.setWeight(tagDto.getWeight() / maxWeight));
+            if (!query.isEmpty()) {
+                list = list.stream().filter(t -> t.getName().toLowerCase().contains(query)).collect(Collectors.toList());
+            }
         }
         return new ListTagsDto(list);
     }
@@ -113,6 +115,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
 
     public Optional<GlobalSettings> getSettingIsPublic(){ return globalSettingsRepository.findByCode("STATISTICS_IS_PUBLIC");}
 
+
     public String loadFile(byte[] image){
 
         if(image.length != 0){
@@ -121,7 +124,6 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             int targetStringLength = 12;
             Random random = new Random();
 
-            new StringBuilder();
             StringBuilder generatedString =random.ints(leftLimit, rightLimit + 1)
                     .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
                     .limit(targetStringLength)
@@ -130,8 +132,8 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             for (int i = 0; i < 10; i = i + 3){
                 generatedString.insert(i,"/");
             }
-
-            generatedString.insert(0,"src/main/resources/static/img/");
+            String pathAnswer = generatedString.insert(0,"upload" ).toString();
+            //generatedString.insert(0,"src/main/resources/static/img");
             String dirs = generatedString.substring(0, generatedString.lastIndexOf("/"));
             String imageName = generatedString.substring(generatedString.lastIndexOf("/"));
             File file = new File(dirs);
@@ -142,7 +144,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 ByteArrayInputStream bais = new ByteArrayInputStream(image);
                 BufferedImage bi = ImageIO.read(bais);
                 ImageIO.write(bi, "jpeg",new File(pathImage));
-                return pathImage;
+                return pathAnswer + ".jpeg";
             } catch (IOException e) {
                 e.printStackTrace();
             }
