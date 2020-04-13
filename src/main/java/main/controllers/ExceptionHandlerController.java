@@ -19,5 +19,6 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
     public ResponseEntity<?> unauthorized(){
         return ResponseEntity.status(401).body(null);
     }
+
 }
 
