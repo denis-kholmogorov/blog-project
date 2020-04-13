@@ -216,6 +216,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 comment.setParentId(commentDto.getParentId());
             }
             Optional<User> userOptional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+            comment.setUser(userOptional.get());
             Integer commentId = commentsRepository.save(comment).getId();
             return ResponseEntity.ok(new AnswerComentDto(commentId));
         }
