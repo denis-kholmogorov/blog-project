@@ -11,7 +11,6 @@ import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -133,7 +132,6 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 generatedString.insert(i,"/");
             }
             String pathAnswer = generatedString.insert(0,"upload" ).toString();
-            //generatedString.insert(0,"src/main/resources/static/img");
             String dirs = generatedString.substring(0, generatedString.lastIndexOf("/"));
             String imageName = generatedString.substring(generatedString.lastIndexOf("/"));
             File file = new File(dirs);
@@ -144,7 +142,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 ByteArrayInputStream bais = new ByteArrayInputStream(image);
                 BufferedImage bi = ImageIO.read(bais);
                 ImageIO.write(bi, "jpeg",new File(pathImage));
-                return pathAnswer + ".jpeg";
+                return "/upload" + pathAnswer + ".jpeg";
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -290,7 +288,6 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     public String loadAvatar(byte[] image) throws IOException {
-
         String path = "src/main/resources/static/img/";
         String imageName = "avatar.087cb69a";
         String pathImage = path + imageName + ".jpg";
