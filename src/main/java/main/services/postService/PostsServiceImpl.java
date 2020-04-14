@@ -108,17 +108,19 @@ public class PostsServiceImpl implements PostService {
         log.info(" запрос поста " + id);
         User user = userRepository.findById(providerToken.getUserIdBySession(session.getId())).orElseThrow(BadRequestException::new);
         Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
-
-        if (providerToken.validateToken(session.getId()) && !user.getPostsSet().contains(post)) {
+        post.getTime().add(Calendar.HOUR, -3);
+        post.setTime(post.getTime());
+        if (providerToken.validateToken(session.getId()) && user != post.getUser()) {
             post.setViewCount(post.getViewCount() + 1);
             postRepository.save(post);
         }
 
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        /*DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Calendar now = Calendar.getInstance();
         now.add(Calendar.MINUTE, 1);
-        log.info(post.getId() + " id поста");
-        post.getViewCount();
+        log.info(post.getId() + " id поста" + post.getViewCount());*/
+
         PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
         postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
         postDtoId.setLikeCount(post.getLikesUsers().size());

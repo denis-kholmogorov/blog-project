@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Date;
+import java.util.Calendar;
 
 @Data
 @AllArgsConstructor
@@ -15,7 +16,7 @@ public class PostCommentsDto
     private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy HH:mm")
-    private Date time;
+    private Calendar time;
 
     private UserDtoPhoto user;
 
