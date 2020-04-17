@@ -5,6 +5,8 @@ import main.DTOEntity.response.ResponseCalendarDto;
 import main.DTOEntity.InitDto;
 import main.DTOEntity.ListTagsDto;
 
+import java.io.IOException;
+
 public interface ApiGeneralService
 {
     InitDto init();
@@ -15,5 +17,5 @@ public interface ApiGeneralService
 
     StatisticsBlogDto getAllStatistics();
 
-    String loadFile(byte[] file);
+    String loadFile(byte[] file) throws IOException;
 }
