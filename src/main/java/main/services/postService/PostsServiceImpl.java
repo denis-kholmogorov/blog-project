@@ -2,6 +2,7 @@ package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
+import main.CustomException.CustomNotFoundException;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 import main.DTOEntity.request.RequestPostDto;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.http.HttpSession;
 import java.text.ParseException;
@@ -41,6 +43,8 @@ public class PostsServiceImpl implements PostService {
 
     PostVotesRepository postVotesRepository;
 
+    GlobalSettingsRepository globalSettingsRepository;
+
     @Autowired
     public PostsServiceImpl(PostRepository postRepository,
                             ModelMapper modelMapper,
@@ -48,7 +52,8 @@ public class PostsServiceImpl implements PostService {
                             UserRepository userRepository,
                             TagRepository tagRepository,
                             TagToPostRepository tagToPostRepository,
-                            PostVotesRepository postVotesRepository) {
+                            PostVotesRepository postVotesRepository,
+                            GlobalSettingsRepository globalSettingsRepository) {
         this.postRepository = postRepository;
         this.modelMapper = modelMapper;
         this.providerToken = providerToken;
@@ -56,6 +61,7 @@ public class PostsServiceImpl implements PostService {
         this.tagRepository = tagRepository;
         this.tagToPostRepository = tagToPostRepository;
         this.postVotesRepository = postVotesRepository;
+        this.globalSettingsRepository = globalSettingsRepository;
     }
 
 
@@ -216,67 +222,80 @@ public class PostsServiceImpl implements PostService {
 
     public AnswerDtoInterface createPost(RequestPostDto postDto, String session) throws ParseException {
         providerToken.validateToken(session);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String formatTime = postDto.getTime().replace("T"," ");
-        Calendar time = Calendar.getInstance();
-        time.setTime(sdf.parse(formatTime));
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.MINUTE, 1);
-        log.info(time.toString() + " время установленное постом");
-        if(time.before(now)) {
-            time = Calendar.getInstance();
-        }
+        Integer userId = providerToken.getUserIdBySession(session);
+        User user = userRepository.findById(userId).orElseThrow(BadRequestException::new);
         Map<String, String> error = new HashMap<>();
-        if(postDto.getTitle().length() >= 10){
-            if(postDto.getText().length() >= 5){
-                Integer userId = providerToken.getUserIdBySession(session);
-                Post post = new Post();
-                post.setUser(userRepository.findById(userId).get());
-                post.setIsActive(postDto.getActive());
-                post.setTime(time);
-                post.setText(postDto.getText());
-                post.setTitle(postDto.getTitle());
-                post.setViewCount(0);
-                post.setModerationStatus(ModerationStatus.NEW);
-                Post p = postRepository.save(post);
-                postDto.getTags().forEach(t ->{
-                    Tag tag = tagRepository.findByName(t).orElse(null);
-                    TagToPost tp = new TagToPost();
-                    if(tag == null) {
-                        tag = new Tag();
-                        tag.setName(t);
-                        Tag newTag = tagRepository.save(tag);
-                        tp.setTag_id(newTag.getId());
-                    }else{
-                        tp.setTag_id(tag.getId());
-                    }
-                    tp.setPost_id(post.getId());
-                    tp.setId((int) tagToPostRepository.count() + 1);
-                    tagToPostRepository.save(tp);
-                    log.info(tag.getName());
 
-                });
+        GlobalSettings settings = globalSettingsRepository.findById(1).get();
+        if(settings.isValue() || user.getIsModerator() == (byte)1) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String formatTime = postDto.getTime().replace("T", " ");
+            Calendar time = Calendar.getInstance();
+            time.setTime(sdf.parse(formatTime));
+            Calendar now = Calendar.getInstance();
+            now.add(Calendar.MINUTE, 1);
+            log.info(time.toString() + " время установленное постом");
+            if (time.before(now)) {
+                time = Calendar.getInstance();
+            }
+            if (postDto.getTitle().length() >= 10) {
+                if (postDto.getText().length() >= 5) {
 
-                return new AnswerDto(true);
+                    Post post = new Post();
+                    post.setUser(user);
+                    post.setIsActive(postDto.getActive());
+                    post.setTime(time);
+                    post.setText(postDto.getText());
+                    post.setTitle(postDto.getTitle());
+                    post.setViewCount(0);
+                    post.setModerationStatus(ModerationStatus.NEW);
+                    Post p = postRepository.save(post);
+                    postDto.getTags().forEach(t -> {
+                        Tag tag = tagRepository.findByName(t).orElse(null);
+                        TagToPost tp = new TagToPost();
+                        if (tag == null) {
+                            tag = new Tag();
+                            tag.setName(t);
+                            Tag newTag = tagRepository.save(tag);
+                            tp.setTag_id(newTag.getId());
+                        } else {
+                            tp.setTag_id(tag.getId());
+                        }
+                        tp.setPost_id(post.getId());
+                        tp.setId((int) tagToPostRepository.count() + 1);
+                        tagToPostRepository.save(tp);
+                        log.info(tag.getName());
+
+                    });
+
+                    return new AnswerDto(true);
+                } else {
+                    error.put("title", "Текст публикации");
+                    error.put("text", "Текст публикации слишком короткий");
+                }
+            } else {
+                error.put("title", "Заголовок публикации");
+                error.put("text", "Заголовок слишком короткий или его нет");
             }
-            else {
-                error.put("text", "Текст публикации слишком короткий");
-            }
-        }else {
-            error.put("title", "Заголовок слишком короткий или его нет");
+            return new AnswerErrorDto(false, error);
         }
+        error.put("title", "Запрет публикация постов");
+        error.put("text", "Публикация постов запрещена");
         return new AnswerErrorDto(false, error);
     }
 
-    public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session) throws ParseException {
+    public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session)  {
         if(providerToken.validateToken(session)) {
             log.info(postDto.getTime());
             Post post = postRepository.findById(id).get();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String formatTime = postDto.getTime().replace("T"," ");
             Calendar time = Calendar.getInstance();
-            time.setTime(sdf.parse(formatTime));
+            try {
+                time.setTime(sdf.parse(formatTime));
+            } catch (ParseException e) {
+                throw new BadRequestException("Неверно установлена дата");
+            }
             Calendar now = Calendar.getInstance();
             now.add(Calendar.MINUTE, 1);
             log.info(time.toString() + " время установленное постом");
@@ -296,6 +315,17 @@ public class PostsServiceImpl implements PostService {
                         if(tag != null && !post.getSetTags().contains(tag)) {
                             TagToPost tp = new TagToPost();
                             tp.setTag_id(tag.getId());
+                            tp.setPost_id(post.getId());
+                            tp.setId((int) tagToPostRepository.count() + 1);
+                            tagToPostRepository.save(tp);
+                            log.info(tag.getName());
+                        }
+                        else if(tag == null){
+                            Tag newTag = new Tag();
+                            newTag.setName(t);
+                            int tagId = tagRepository.save(newTag).getId();
+                            TagToPost tp = new TagToPost();
+                            tp.setTag_id(tagId);
                             tp.setPost_id(post.getId());
                             tp.setId((int) tagToPostRepository.count() + 1);
                             tagToPostRepository.save(tp);
