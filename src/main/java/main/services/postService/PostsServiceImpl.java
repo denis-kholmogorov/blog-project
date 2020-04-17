@@ -20,7 +20,6 @@ import javax.servlet.http.HttpSession;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -108,13 +107,6 @@ public class PostsServiceImpl implements PostService {
         log.info(" запрос поста " + id);
         User user = userRepository.findById(providerToken.getUserIdBySession(session.getId())).orElseThrow(BadRequestException::new);
         Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
-        post.getTime().add(Calendar.HOUR, -3);
-        post.setTime(post.getTime());
-        if (providerToken.validateToken(session.getId()) && user != post.getUser()) {
-            post.setViewCount(post.getViewCount() + 1);
-            postRepository.save(post);
-        }
-
 
         /*DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Calendar now = Calendar.getInstance();
@@ -122,10 +114,15 @@ public class PostsServiceImpl implements PostService {
         log.info(post.getId() + " id поста" + post.getViewCount());*/
 
         PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
-        postDtoId.setTags(post.getSetTags().stream().map(t -> t.getName()).collect(Collectors.toSet()));
+        postDtoId.setTags(post.getSetTags().stream().map(Tag::getName).collect(Collectors.toSet()));
         postDtoId.setLikeCount(post.getLikesUsers().size());
         postDtoId.setDislikeCount(post.getDisLikesUsers().size());
 
+        if (providerToken.validateToken(session.getId()) && !user.getId().equals(post.getUser().getId())) {
+            postDtoId.setViewCount(post.getViewCount());
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+        }
         return postDtoId;
     }
 
@@ -245,15 +242,20 @@ public class PostsServiceImpl implements PostService {
                 Post p = postRepository.save(post);
                 postDto.getTags().forEach(t ->{
                     Tag tag = tagRepository.findByName(t).orElse(null);
-                    if(tag != null) {
-                        TagToPost tp = new TagToPost();
+                    TagToPost tp = new TagToPost();
+                    if(tag == null) {
+                        tag = new Tag();
+                        tag.setName(t);
+                        Tag newTag = tagRepository.save(tag);
+                        tp.setTag_id(newTag.getId());
+                    }else{
                         tp.setTag_id(tag.getId());
-                        tp.setPost_id(post.getId());
-                        tp.setId((int) tagToPostRepository.count() + 1);
-                        tagToPostRepository.save(tp);
-                        log.info(tag.getName());
                     }
-                    else {log.info("Tag not fount");}
+                    tp.setPost_id(post.getId());
+                    tp.setId((int) tagToPostRepository.count() + 1);
+                    tagToPostRepository.save(tp);
+                    log.info(tag.getName());
+
                 });
 
                 return new AnswerDto(true);

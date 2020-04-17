@@ -181,6 +181,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
     }
 
     public AnswerDto setModerationDecision(ModerationDecisionDto decision, String session){
+
         Optional<User> optionalUser = userRepository.findById(providerToken.getUserIdBySession(session));
         User user = optionalUser.get();
         if(user.getIsModerator() == 1){
@@ -208,7 +209,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
             if(post == null) throw new BadRequestException("Пост не найден");
             PostComments comment = new PostComments();
             comment.setComment(commentDto.getText());
-            comment.setPost(post);
+            post.getComments().add(comment);
             if(commentDto.getParentId() != null)
             {
                 User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
@@ -248,7 +249,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
                 return ResponseEntity.ok(errors);
             }
 
-            if(profileDto.getName().matches("\\w+.?\\w+") && profileDto.getName().length() > 2){
+            if(profileDto.getName().matches("[a-zA-ZА-Яа-я]+.?[a-zA-ZА-Яа-я]+") && profileDto.getName().length() > 2){
                 user.setName(profileDto.getName());
             }else {
                 errors.getErrors().put("name","Имя указано неверно");
@@ -295,7 +296,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService
         ByteArrayInputStream bais = new ByteArrayInputStream(image);
         BufferedImage bi = ImageIO.read(bais);
         ImageIO.write(bi, "jpg", new File(pathImage));
-        return "avatar.jpg";
+        return "img/avatar.087cb69a.jpg";
 
     }
 }

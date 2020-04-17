@@ -21,7 +21,7 @@ public class PostDtoId extends PostDto{
     private String announce;
 
     @JsonIgnore
-    private Integer commentCounts;
+    private Integer commentCount;
 
     private String text = super.getAnnounce();
 

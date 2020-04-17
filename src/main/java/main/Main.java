@@ -15,8 +15,10 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import java.util.TimeZone;
 
 @SpringBootApplication
 public class Main
@@ -24,6 +26,11 @@ public class Main
     public static void main(String[] args)
     {
         SpringApplication.run(Main.class, args);
+    }
+
+    @PostConstruct
+    void started() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     @Bean
