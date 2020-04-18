@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Random;
 
 @Slf4j
@@ -40,6 +41,7 @@ public class CaptchaServiceImpl
         CaptchaCodes captcha = new CaptchaCodes();
         captcha.setCode(imageCode);
         captcha.setSecretCode(secretCode);
+        log.info(String.valueOf(Calendar.getInstance().get(Calendar.HOUR)));
         log.info(imageCode);
         log.info(secretCode);
         codesRepository.save(captcha);

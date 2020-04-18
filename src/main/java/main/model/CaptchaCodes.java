@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.Date;
 
 @Data
 @Entity
@@ -19,7 +20,7 @@ public class CaptchaCodes
 
     @CreationTimestamp
     @Column(name = "time", nullable = false, columnDefinition = "datetime")
-    private Calendar time;
+    private Date time;
 
     @Column(name = "code", nullable = false, columnDefinition = "tinytext")
     private String code;

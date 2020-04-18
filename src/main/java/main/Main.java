@@ -28,10 +28,6 @@ public class Main
         SpringApplication.run(Main.class, args);
     }
 
-    @PostConstruct
-    void started() {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    }
 
     @Bean
     public ModelMapper modelMapper() {

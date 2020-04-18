@@ -2,8 +2,8 @@
 --INSERT users
 INSERT INTO `blog_site`.`users`(`id`,`email`,`is_moderator`,`name`,`password`,`reg_time`)
 VALUES
-('1','admin@admin.ru','1','admin','admin','2020-01-01 12:12:01'),
-('2','user1@user1.ru','0','user1','user1','2020-01-02 22:22:22'),
+('1','admin1@admin.ru','1','admin','admin','2020-01-01 12:12:01'),
+('2','user@user1.ru','0','user','user','2020-01-02 22:22:22'),
 ('3','user2@user2.ru','0','user2','user2','2020-01-03 23:23:23');
 
 --INSERT posts
