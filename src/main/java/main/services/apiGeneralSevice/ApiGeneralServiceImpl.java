@@ -112,7 +112,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
 
     public Map<String, Boolean> getSettings(String sessionId) {
 
-        if (userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
+        if (userRepository.findById(providerToken.getAuthUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
             Map<String, Boolean> settings = globalSettingsRepository.findOnlyCodeAndValue();
             return settings;
         }
@@ -120,7 +120,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
     }
 
     public boolean setSettings(Map<String, Boolean> settings, String sessionId) {
-        if (userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
+        if (userRepository.findById(providerToken.getAuthUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
             List<GlobalSettings> listSettingsFromBD = globalSettingsRepository.findAllSettings();
             log.info(listSettingsFromBD.size() + " size list settings");
             for (String code : settings.keySet()) {
@@ -140,7 +140,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
 
     public AnswerDto setModerationDecision(ModerationDecisionDto decision, String session) {
 
-        Optional<User> optionalUser = userRepository.findById(providerToken.getUserIdBySession(session));
+        Optional<User> optionalUser = userRepository.findById(providerToken.getAuthUserIdBySession(session));
         User user = optionalUser.get();
         if (user.getIsModerator() == 1) {
             Post post = postRepository.findById(decision.getPost_id()).orElse(null);
@@ -159,7 +159,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
     }
 
     public ResponseEntity<?> setComment(RequestCommentsDto commentDto, HttpSession session) {
-        providerToken.getUserIdBySession(session.getId());
+        providerToken.getAuthUserIdBySession(session.getId());
         if (commentDto.getText().length() > 10) {
             Post post = postRepository.findById(commentDto.getPostId()).orElse(null);
             if (post == null) throw new BadRequestException("Пост не найден");
@@ -170,7 +170,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
                 if (parentUser == null) throw new BadRequestException("Юзер не найден");
                 comment.setParentId(commentDto.getParentId());
             }
-            Optional<User> userOptional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+            Optional<User> userOptional = userRepository.findById(providerToken.getAuthUserIdBySession(session.getId()));
             comment.setUser(userOptional.get());
             post.getComments().add(comment);
             comment.setPost(post);
@@ -185,14 +185,14 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
     }
 
     public StatisticsBlogDto getMyStatistics(String sessionId) {
-        Integer userId = providerToken.getUserIdBySession(sessionId);
+        Integer userId = providerToken.getAuthUserIdBySession(sessionId);
         return new StatisticsBlogDto(postRepository.findAllStatisticsById(userId));
     }
 
     public ResponseEntity<?> setMyProfile(RequestProfileDto profileDto, HttpSession session) {
         AnswerErrorDto errors = new AnswerErrorDto();
         if (providerToken.validateToken(session.getId())) {
-            Optional<User> optional = userRepository.findById(providerToken.getUserIdBySession(session.getId()));
+            Optional<User> optional = userRepository.findById(providerToken.getAuthUserIdBySession(session.getId()));
             if (optional.isEmpty()) throw new BadRequestException("User not found");
             User user = optional.get();
             if (profileDto.getPassword() != null && profileDto.getPassword().length() >= 6) {

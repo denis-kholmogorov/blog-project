@@ -2,21 +2,21 @@ package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
-import main.CustomException.CustomNotFoundException;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 import main.DTOEntity.request.RequestPostDto;
 import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
+import main.security.UserAuthenticationException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import javax.servlet.http.HttpSession;
 import java.text.ParseException;
@@ -28,6 +28,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class PostsServiceImpl implements PostService {
+
+    @Value("${post.min-length-title}")
+    private int maxLenTitle;
+
+    @Value("${post.min-length-text}")
+    private int maxLenText;
+
+
 
     PostRepository postRepository;
 
@@ -110,19 +118,22 @@ public class PostsServiceImpl implements PostService {
 
 
     public PostDtoId findPostById(Integer id, HttpSession session) {
-        log.info(" запрос поста " + id);
-        User user = userRepository.findById(providerToken.getUserIdBySession(session.getId())).orElseThrow(BadRequestException::new);
+        Integer idUser = providerToken.getUserIdBySession(session.getId());
         Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
+
+        if (idUser != null && providerToken.validateToken(session.getId())) {
+            User user = userRepository.findById(idUser).orElseThrow(BadRequestException::new);
+            if(!user.getId().equals(post.getUser().getId())){
+                post.setViewCount(post.getViewCount() + 1);
+                post = postRepository.save(post);
+            }
+        }
+        post.getComments().forEach(e -> e.getUser().setPhoto(""));
         PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
         postDtoId.setTags(post.getSetTags().stream().map(Tag::getName).collect(Collectors.toSet()));
         postDtoId.setLikeCount(post.getLikesUsers().size());
         postDtoId.setDislikeCount(post.getDisLikesUsers().size());
 
-        if (providerToken.validateToken(session.getId()) && !user.getId().equals(post.getUser().getId())) {
-            postDtoId.setViewCount(post.getViewCount());
-            post.setViewCount(post.getViewCount() + 1);
-            postRepository.save(post);
-        }
         return postDtoId;
     }
 
@@ -147,80 +158,73 @@ public class PostsServiceImpl implements PostService {
 
     public ListPostsDto getMyPosts(int offset, int limit, String status, String sessionId){
 
-        if(providerToken.validateToken(sessionId)){
-            int userId = providerToken.getUserIdBySession(sessionId);
-            Pageable paging = PageRequest.of((offset/limit), limit);
-            Page<Post> page = null;
-            byte isActive = 0;
-            ModerationStatus moderationStatus = null;
-            switch (status) {
-                case "inactive":
-                    isActive = (byte)0;
-                    break;
-                case "pending":
-                    isActive = (byte)1;
-                    moderationStatus = ModerationStatus.NEW;
-                    break;
-                case "declined":
-                    isActive = (byte)1;
-                    moderationStatus = ModerationStatus.DECLINED;
-                    break;
-                case "published":
-                    isActive = (byte)1;
-                    moderationStatus = ModerationStatus.ACCEPTED;
-                    break;
-            }
-            if(moderationStatus == null) {
-                 page = postRepository.findMyPosts(userId, isActive, paging);
-            }
-            else {
-                page = postRepository.findMyPosts(userId, isActive, moderationStatus, paging);
-            }
-            List<MyPostDto> myPosts = page
-                    .stream()
-                    .map(p->new MyPostDto(p))
-                    .collect(Collectors.toList());
-            log.info("количество записей " + userId + " равно " + myPosts.size());
-            ListPostsDto listPostsDto = new ListPostsDto(myPosts);
-            listPostsDto.setCount((int)page.getTotalElements());
-            return listPostsDto;
+        int userId = providerToken.getAuthUserIdBySession(sessionId);
+        Pageable paging = PageRequest.of((offset/limit), limit);
+        Page<Post> page = null;
+        byte isActive = 0;
+        ModerationStatus moderationStatus = null;
+        switch (status) {
+            case "inactive":
+                isActive = (byte)0;
+                break;
+            case "pending":
+                isActive = (byte)1;
+                moderationStatus = ModerationStatus.NEW;
+                break;
+            case "declined":
+                isActive = (byte)1;
+                moderationStatus = ModerationStatus.DECLINED;
+                break;
+            case "published":
+                isActive = (byte)1;
+                moderationStatus = ModerationStatus.ACCEPTED;
+                break;
         }
-        return null;
+        if(moderationStatus == null) {
+             page = postRepository.findMyPosts(userId, isActive, paging);
+        }
+        else {
+            page = postRepository.findMyPosts(userId, isActive, moderationStatus, paging);
+        }
+        List<MyPostDto> myPosts = page
+                .stream()
+                .map(p->new MyPostDto(p))
+                .collect(Collectors.toList());
+        log.info("количество записей " + userId + " равно " + myPosts.size());
+        ListPostsDto listPostsDto = new ListPostsDto(myPosts);
+        listPostsDto.setCount((int)page.getTotalElements());
+        return listPostsDto;
     }
 
     public ListPostsDto getMyModerationPosts(int offset, int limit, String status, String sessionId){
 
-        if(providerToken.validateToken(sessionId)) {
-            int userId = providerToken.getUserIdBySession(sessionId);
-            Pageable paging = PageRequest.of((offset/limit), limit, Sort.by("time").descending());
-            List<PostModerationDto> postsList;
-            Page<Post> posts;
-            if(status.equals("new")) {
-                posts = postRepository.findModerationNewPosts(paging);
-                postsList = posts.stream()
-                        .map(p -> new PostModerationDto(p))
-                        .collect(Collectors.toList());
-            }else{
-                posts = postRepository.findMyModerationPosts(userId, status, paging);
-                postsList = posts.stream()
-                        .map(p -> new PostModerationDto(p))
-                        .collect(Collectors.toList());
+        int userId = providerToken.getAuthUserIdBySession(sessionId);
+        Pageable paging = PageRequest.of((offset/limit), limit, Sort.by("time").descending());
+        List<PostModerationDto> postsList;
+        Page<Post> posts;
+        if(status.equals("new")) {
+            posts = postRepository.findModerationNewPosts(paging);
+            postsList = posts.stream()
+                    .map(p -> new PostModerationDto(p))
+                    .collect(Collectors.toList());
+        }else{
+            posts = postRepository.findMyModerationPosts(userId, status, paging);
+            postsList = posts.stream()
+                    .map(p -> new PostModerationDto(p))
+                    .collect(Collectors.toList());
 
-            }
-            ListPostsDto listPostsDto = new ListPostsDto(postsList);
-            listPostsDto.setCount((int)posts.getTotalElements());
-            return listPostsDto;
         }
-        return null;
+        ListPostsDto listPostsDto = new ListPostsDto(postsList);
+        listPostsDto.setCount((int)posts.getTotalElements());
+        return listPostsDto;
     }
 
-    public AnswerDtoInterface createPost(RequestPostDto postDto, String session) throws ParseException {
-        providerToken.validateToken(session);
-        Integer userId = providerToken.getUserIdBySession(session);
-        User user = userRepository.findById(userId).orElseThrow(BadRequestException::new);
-        Map<String, String> error = new HashMap<>();
+    public AnswerDto createPost(RequestPostDto postDto, String session) throws ParseException {
 
-        GlobalSettings settings = globalSettingsRepository.findById(1).get();
+        Integer userId = providerToken.getAuthUserIdBySession(session);
+        User user = userRepository.findById(userId).orElseThrow(BadRequestException::new);
+
+        GlobalSettings settings = globalSettingsRepository.findByCode("MULTIUSER_MODE").get();
         if(settings.isValue() || user.getIsModerator() == (byte)1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String formatTime = postDto.getTime().replace("T", " ");
@@ -228,121 +232,96 @@ public class PostsServiceImpl implements PostService {
             time.setTime(sdf.parse(formatTime));
             Calendar now = Calendar.getInstance();
             now.add(Calendar.MINUTE, 1);
-            log.info(time.toString() + " время установленное постом");
             if (time.before(now)) {
                 time = Calendar.getInstance();
             }
-            if (postDto.getTitle().length() >= 10) {
-                if (postDto.getText().length() >= 5) {
+            if (postDto.getTitle().length() < maxLenTitle) throw new BadRequestException("Заголовок меньше " + maxLenTitle + " символов");
+            if (postDto.getText().length() < maxLenText) throw new BadRequestException("Текст меньше " + maxLenText + " символов");
 
-                    Post post = new Post();
-                    post.setUser(user);
-                    post.setIsActive(postDto.getActive());
-                    post.setTime(time);
-                    post.setText(postDto.getText());
-                    post.setTitle(postDto.getTitle());
-                    post.setViewCount(0);
-                    post.setModerationStatus(ModerationStatus.NEW);
-                    Post p = postRepository.save(post);
-                    postDto.getTags().forEach(t -> {
-                        Tag tag = tagRepository.findByName(t).orElse(null);
-                        TagToPost tp = new TagToPost();
-                        if (tag == null) {
-                            tag = new Tag();
-                            tag.setName(t);
-                            Tag newTag = tagRepository.save(tag);
-                            tp.setTag_id(newTag.getId());
-                        } else {
-                            tp.setTag_id(tag.getId());
-                        }
-                        tp.setPost_id(post.getId());
-                        tp.setId((int) tagToPostRepository.count() + 1);
-                        tagToPostRepository.save(tp);
-                        log.info(tag.getName());
-
-                    });
-
-                    return new AnswerDto(true);
+            Post post = new Post();
+            post.setUser(user);
+            post.setIsActive(postDto.getActive());
+            post.setTime(time);
+            post.setText(postDto.getText());
+            post.setTitle(postDto.getTitle());
+            post.setViewCount(0);
+            post.setModerationStatus(ModerationStatus.NEW);
+            postRepository.save(post);
+            postDto.getTags().forEach(t -> {
+                Tag tag = tagRepository.findByName(t).orElse(null);
+                TagToPost tp = new TagToPost();
+                if (tag == null) {
+                    tag = new Tag();
+                    tag.setName(t);
+                    Tag newTag = tagRepository.save(tag);
+                    tp.setTag_id(newTag.getId());
                 } else {
-                    error.put("title", "Текст публикации");
-                    error.put("text", "Текст публикации слишком короткий");
+                    tp.setTag_id(tag.getId());
                 }
-            } else {
-                error.put("title", "Заголовок публикации");
-                error.put("text", "Заголовок слишком короткий или его нет");
-            }
-            return new AnswerErrorDto(false, error);
+                tp.setPost_id(post.getId());
+                tp.setId((int) tagToPostRepository.count() + 1);
+                tagToPostRepository.save(tp);
+                log.info(tag.getName());
+            });
+            return new AnswerDto(true);
         }
-        error.put("title", "Запрет публикация постов");
-        error.put("text", "Публикация постов запрещена");
-        return new AnswerErrorDto(false, error);
+        throw new BadRequestException("Публикация постов запрещена модератором");
     }
 
     public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session)  {
-        if(providerToken.validateToken(session)) {
-            log.info(postDto.getTime());
-            Post post = postRepository.findById(id).get();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-            String formatTime = postDto.getTime().replace("T"," ");
-            Calendar time = Calendar.getInstance();
-            try {
-                time.setTime(sdf.parse(formatTime));
-            } catch (ParseException e) {
-                throw new BadRequestException("Неверно установлена дата");
-            }
-            Calendar now = Calendar.getInstance();
-            now.add(Calendar.MINUTE, 1);
-            log.info(time.toString() + " время установленное постом");
-            if(time.before(now)) {
-                time = Calendar.getInstance();
-            }
-            Map<String, String> error = new HashMap<>();
-            if (postDto.getTitle().length() >= 10) {
-                if (postDto.getText().length() >= 5) {
-                    post.setTime(time);
-                    post.setIsActive(postDto.getActive());
-                    post.setTitle(postDto.getTitle());
-                    post.setText(postDto.getText());
-                    postRepository.save(post);
-                    postDto.getTags().forEach(t ->{
-                        Tag tag = tagRepository.findByName(t).orElse(null);
-                        if(tag != null && !post.getSetTags().contains(tag)) {
-                            TagToPost tp = new TagToPost();
-                            tp.setTag_id(tag.getId());
-                            tp.setPost_id(post.getId());
-                            tp.setId((int) tagToPostRepository.count() + 1);
-                            tagToPostRepository.save(tp);
-                            log.info(tag.getName());
-                        }
-                        else if(tag == null){
-                            Tag newTag = new Tag();
-                            newTag.setName(t);
-                            int tagId = tagRepository.save(newTag).getId();
-                            TagToPost tp = new TagToPost();
-                            tp.setTag_id(tagId);
-                            tp.setPost_id(post.getId());
-                            tp.setId((int) tagToPostRepository.count() + 1);
-                            tagToPostRepository.save(tp);
-                            log.info(tag.getName());
-                        }
-                    });
-                    return new AnswerDto(true);
-                }
-                else {
-                    error.put("text", "Текст публикации слишком короткий");
-                }
-            }
-            else {
-                error.put("title", "Заголовок слишком короткий или его нет");
-            }
-            return new AnswerErrorDto(false, error);
+
+        providerToken.getAuthUserIdBySession(session);
+        Post post = postRepository.findById(id).get();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String formatTime = postDto.getTime().replace("T"," ");
+        Calendar time = Calendar.getInstance();
+        try {
+            time.setTime(sdf.parse(formatTime));
+        } catch (ParseException e) {
+            throw new BadRequestException("Неверно установлена дата");
         }
-        return null;
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.MINUTE, 1);
+        if(time.before(now)) {
+            time = Calendar.getInstance();
+        }
+
+        if (postDto.getTitle().length() < maxLenTitle) throw new BadRequestException("Заголовок меньше " + maxLenTitle + " символов");
+        if (postDto.getText().length() < maxLenText) throw new BadRequestException("Текст меньше " + maxLenText + " символов");
+
+        post.setTime(time);
+        post.setIsActive(postDto.getActive());
+        post.setTitle(postDto.getTitle());
+        post.setText(postDto.getText());
+        postRepository.save(post);
+        postDto.getTags().forEach(t ->{
+            Tag tag = tagRepository.findByName(t).orElse(null);
+            if(tag != null && !post.getSetTags().contains(tag)) {
+                TagToPost tp = new TagToPost();
+                tp.setTag_id(tag.getId());
+                tp.setPost_id(post.getId());
+                tp.setId((int) tagToPostRepository.count() + 1);
+                tagToPostRepository.save(tp);
+                log.info(tag.getName());
+            }
+            else if(tag == null){
+                Tag newTag = new Tag();
+                newTag.setName(t);
+                int tagId = tagRepository.save(newTag).getId();
+                TagToPost tp = new TagToPost();
+                tp.setTag_id(tagId);
+                tp.setPost_id(post.getId());
+                tp.setId((int) tagToPostRepository.count() + 1);
+                tagToPostRepository.save(tp);
+                log.info(tag.getName());
+            }
+        });
+        return new AnswerDto(true);
     }
 
     public AnswerDto setLikePost(LikeRequestDto likeDto, HttpSession session) {
         Post post = postRepository.findById(likeDto.getPostId()).get();
-        Integer userId = providerToken.getUserIdBySession(session.getId());
+        Integer userId = providerToken.getAuthUserIdBySession(session.getId());
         PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
         if (votes == null) {
             PostVotes postVotes = PostVotes.builder()
@@ -365,7 +344,7 @@ public class PostsServiceImpl implements PostService {
         }
     }
         public AnswerDto setDislikePost(LikeRequestDto likeDto, HttpSession session){
-            Integer userId = providerToken.getUserIdBySession(session.getId());
+            Integer userId = providerToken.getAuthUserIdBySession(session.getId());
             PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
             Post post = postRepository.findById(likeDto.getPostId()).get();
             if (votes == null) {

@@ -82,8 +82,7 @@ public class ApiPostController
                                      @RequestParam("status") String status,
                                      HttpSession httpSession){
         ListPostsDto myPosts = postsServiceImpl.getMyPosts(offset,limit,status,httpSession.getId());
-        if(myPosts != null) return ResponseEntity.ok(myPosts);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        return ResponseEntity.ok(myPosts);
     }
 
     @GetMapping(value = "/moderation", params ={"offset","limit","status"})
@@ -93,18 +92,16 @@ public class ApiPostController
                                                HttpSession httpSession)
     {
         ListPostsDto listPostsDto = postsServiceImpl.getMyModerationPosts(offset, limit, status, httpSession.getId());
-        if(listPostsDto != null) return ResponseEntity.ok(listPostsDto);
-        return null;
+        return ResponseEntity.ok(listPostsDto);
     }
 
     @PostMapping()
     public ResponseEntity<?> createPost(@RequestBody RequestPostDto post, HttpSession session) throws ParseException {
 
-        AnswerDtoInterface answer = postsServiceImpl.createPost(post, session.getId());
-        if(answer != null){
-            return ResponseEntity.ok(answer);
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        AnswerDto answer = postsServiceImpl.createPost(post, session.getId());
+
+        return ResponseEntity.ok(answer);
+
     }
 
     @PutMapping(value = "/{id}")

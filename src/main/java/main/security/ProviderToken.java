@@ -20,11 +20,18 @@ public class ProviderToken {
         return sessionId;
     }
 
-    public Integer getUserIdBySession(String sessionId){
+    public Integer getAuthUserIdBySession(String sessionId){
         if (tokens.containsKey(sessionId)) {
             return tokens.get(sessionId);
         }
         throw new UserAuthenticationException("Token is invalid");
+    }
+
+    public Integer getUserIdBySession(String sessionId){
+        if (tokens.containsKey(sessionId)) {
+            return tokens.get(sessionId);
+        }
+       return null;
     }
 
    public boolean validateToken(String sessionId){

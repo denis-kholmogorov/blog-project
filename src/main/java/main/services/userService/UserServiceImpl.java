@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.NoHandlerFoundException;
 
 import javax.servlet.http.HttpSession;
 import java.util.Optional;
@@ -110,7 +109,7 @@ public class UserServiceImpl implements UserService
 
     @Override
     public ResponseLoginDto findBySession(String sessionId) throws UserAuthenticationException{
-            Integer userId = providerToken.getUserIdBySession(sessionId);
+            Integer userId = providerToken.getAuthUserIdBySession(sessionId);
             User user = userRepository.findById(userId).orElseThrow(CustomNotFoundException::new);
             Integer moderationCount = userRepository.findCountModerationPostsById(user.getId());
             UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),

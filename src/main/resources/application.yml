@@ -22,3 +22,6 @@ copyright.phone: +7 915 003-08-44
 copyright.email: dendiesel88@yandex.ru
 copyright.copyright: Denis Kholmogorov
 copyright.copyrightFrom: 2020
+
+post.min-length-title: 5
+post.min-length-text: 10

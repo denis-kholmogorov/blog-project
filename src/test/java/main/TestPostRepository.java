@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-@TestPropertySource("classpath:/application.yml")
+//@TestPropertySource("classpath:/application-test.yml")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class TestPostRepository
@@ -60,9 +60,9 @@ public class TestPostRepository
 
     @Test
     public void testFindAllPostsBySearch(){
-        String query = "admin";
+        String query = "of";
         List<Post> posts = postRepository.findPostBySearch((byte) 1, ModerationStatus.ACCEPTED, query, paging).getContent();
-        assertEquals(1, posts.size());
+        assertEquals(5, posts.size());
         assertEquals("post of admin", posts.get(0).getText());
         assertEquals("post of admin", posts.get(0).getTitle());
     }
