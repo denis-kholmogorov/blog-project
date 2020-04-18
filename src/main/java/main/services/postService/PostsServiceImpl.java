@@ -2,13 +2,13 @@ package main.services.postService;
 
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
+import main.CustomException.CustomNotFoundException;
 import main.DTOEntity.*;
 import main.DTOEntity.PostDtoInterface.AnswerDtoInterface;
 import main.DTOEntity.request.RequestPostDto;
 import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
-import main.security.UserAuthenticationException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,8 @@ import javax.servlet.http.HttpSession;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Calendar;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -160,7 +161,7 @@ public class PostsServiceImpl implements PostService {
 
         int userId = providerToken.getAuthUserIdBySession(sessionId);
         Pageable paging = PageRequest.of((offset/limit), limit);
-        Page<Post> page = null;
+        Page<Post> page;
         byte isActive = 0;
         ModerationStatus moderationStatus = null;
         switch (status) {
@@ -188,7 +189,7 @@ public class PostsServiceImpl implements PostService {
         }
         List<MyPostDto> myPosts = page
                 .stream()
-                .map(p->new MyPostDto(p))
+                .map(MyPostDto::new)
                 .collect(Collectors.toList());
         log.info("количество записей " + userId + " равно " + myPosts.size());
         ListPostsDto listPostsDto = new ListPostsDto(myPosts);
@@ -204,16 +205,13 @@ public class PostsServiceImpl implements PostService {
         Page<Post> posts;
         if(status.equals("new")) {
             posts = postRepository.findModerationNewPosts(paging);
-            postsList = posts.stream()
-                    .map(p -> new PostModerationDto(p))
-                    .collect(Collectors.toList());
         }else{
             posts = postRepository.findMyModerationPosts(userId, status, paging);
-            postsList = posts.stream()
-                    .map(p -> new PostModerationDto(p))
-                    .collect(Collectors.toList());
 
         }
+        postsList = posts.stream()
+                .map(PostModerationDto::new)
+                .collect(Collectors.toList());
         ListPostsDto listPostsDto = new ListPostsDto(postsList);
         listPostsDto.setCount((int)posts.getTotalElements());
         return listPostsDto;
@@ -224,7 +222,7 @@ public class PostsServiceImpl implements PostService {
         Integer userId = providerToken.getAuthUserIdBySession(session);
         User user = userRepository.findById(userId).orElseThrow(BadRequestException::new);
 
-        GlobalSettings settings = globalSettingsRepository.findByCode("MULTIUSER_MODE").get();
+        GlobalSettings settings = globalSettingsRepository.findByCode("MULTIUSER_MODE").orElseThrow(BadRequestException::new);
         if(settings.isValue() || user.getIsModerator() == (byte)1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String formatTime = postDto.getTime().replace("T", " ");
@@ -271,7 +269,8 @@ public class PostsServiceImpl implements PostService {
     public AnswerDtoInterface changePost(Integer id, RequestPostDto postDto, String session)  {
 
         providerToken.getAuthUserIdBySession(session);
-        Post post = postRepository.findById(id).get();
+
+        Post post = postRepository.findById(id).orElseThrow(CustomNotFoundException::new);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String formatTime = postDto.getTime().replace("T"," ");
         Calendar time = Calendar.getInstance();
@@ -313,15 +312,14 @@ public class PostsServiceImpl implements PostService {
                 tp.setPost_id(post.getId());
                 tp.setId((int) tagToPostRepository.count() + 1);
                 tagToPostRepository.save(tp);
-                log.info(tag.getName());
             }
         });
         return new AnswerDto(true);
     }
 
     public AnswerDto setLikePost(LikeRequestDto likeDto, HttpSession session) {
-        Post post = postRepository.findById(likeDto.getPostId()).get();
         Integer userId = providerToken.getAuthUserIdBySession(session.getId());
+        Post post = postRepository.findById(likeDto.getPostId()).orElseThrow(CustomNotFoundException::new);
         PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
         if (votes == null) {
             PostVotes postVotes = PostVotes.builder()
@@ -346,7 +344,7 @@ public class PostsServiceImpl implements PostService {
         public AnswerDto setDislikePost(LikeRequestDto likeDto, HttpSession session){
             Integer userId = providerToken.getAuthUserIdBySession(session.getId());
             PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
-            Post post = postRepository.findById(likeDto.getPostId()).get();
+            Post post = postRepository.findById(likeDto.getPostId()).orElseThrow(CustomNotFoundException::new);
             if (votes == null) {
                 PostVotes postVotes = PostVotes.builder()
                         .postId(likeDto.getPostId())
