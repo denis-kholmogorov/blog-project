@@ -1,10 +1,10 @@
 
 --INSERT users
-INSERT INTO `blog_site`.`users`(`id`,`email`,`is_moderator`,`name`,`password`,`reg_time`)
+INSERT INTO `blog_site`.`users`(`id`,`email`,`is_moderator`,`name`,`password`,`reg_time`,`photo` )
 VALUES
-('1','admin@admin.ru','1','admin','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-01 12:12:01'),
-('2','user1@user.ru','0','user1','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-02 12:22:22'),
-('3','user2@user.ru','0','user2','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-03 12:23:23');
+('1','admin@admin.ru','1','admin','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-01 12:12:01', 'img/default.c66f8640.jpg'),
+('2','user1@user.ru','0','user1','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-02 12:22:22', 'img/default.c66f8640.jpg'),
+('3','user2@user.ru','0','user2','$2a$10$y2gw7ewTIv1P82cooxBpIeX6jdiZs2dPUPtOO4kZb0cnpkPK7TM9u','2020-04-03 12:23:23','img/default.c66f8640.jpg');
 
 --INSERT posts
 INSERT INTO `blog_site`.`posts`
@@ -14,7 +14,7 @@ VALUES
 ('2','1','ACCEPTED','1','post of user','2020-04-02 22:23:01','post of user','20','2'),
 ('3','1','ACCEPTED','1','post of user2','2020-04-03 22:23:01','post of user2','30','3'),
 ('4','1','NEW','1','post of user2 NEW','2020-04-03 22:23:01','post of user2','0','3'),
-('5','1','NEW','1','post of user2 NEW','2020-04-03 22:23:01','post of user2','0','3');
+('5','1','DECLINED','1','post of user2 DECLINED','2020-04-03 22:23:01','post of user2','0','3');
 
 
 
@@ -57,7 +57,7 @@ VALUES
 ('5','1','3');
 
 INSERT INTO `blog_site`.`global_settings` ( `code`, `name`, `value`) VALUES
-( 'MULTIUSER_MODE', 'Многопользовательский режим', 'y'),
+('MULTIUSER_MODE', 'Многопользовательский режим', 'y'),
 ('POST_PREMODERATION','Премодерация постов','y'),
 ('STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога','y');
 

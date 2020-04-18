@@ -116,8 +116,6 @@ public class UserServiceImpl implements UserService
             UserLoginDto answer = new UserLoginDto(user.getId(), user.getName(), user.getPhoto(), user.getEmail(),
                     user.getIsModerator(), moderationCount);
             return new ResponseLoginDto(answer);
-
-
     }
 
 
