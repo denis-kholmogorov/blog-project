@@ -100,8 +100,10 @@ public class UserServiceImpl implements UserService
                         user.getIsModerator(), moderationCount);
                 return new ResponseLoginDto(answer);
             }
+
         }
-        return null;
+
+        throw new BadRequestException("Пароль или логин не верны");
     }
 
     @Override
