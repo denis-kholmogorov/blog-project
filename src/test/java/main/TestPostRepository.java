@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-//@TestPropertySource("classpath:/application-test.yml")
+@TestPropertySource("classpath:/application-test.yml")
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class TestPostRepository
@@ -38,8 +38,8 @@ public class TestPostRepository
     Pageable paging = PageRequest.of(0, 10);
 
     @Test
-    @Sql(scripts = "classpath:/clean_up.sql")
-    @Sql(scripts = {"classpath:/insert_bd.sql"},
+    @Sql(scripts = "classpath:/clean.sql")
+    @Sql(scripts = {"classpath:/insert.sql"},
             config = @SqlConfig(encoding = "utf-8",
             transactionMode = SqlConfig.TransactionMode.ISOLATED),
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -53,7 +53,7 @@ public class TestPostRepository
 
     @Test
     public void testFindAllPostsByTag(){
-        String tag  = "Java";
+        String tag  = "java";
         List<Post> posts = postRepository.findAllPostsByTag((byte) 1, ModerationStatus.ACCEPTED.toString(),tag, paging).getContent();
         assertEquals(1, (int)posts.get(0).getId());
     }

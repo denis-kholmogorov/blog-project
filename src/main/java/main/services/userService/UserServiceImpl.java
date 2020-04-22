@@ -60,28 +60,25 @@ public class UserServiceImpl implements UserService
 
     @Override
     public AnswerErrorDto registerUser(RequestRegisterDto dto) {
-        AnswerErrorDto errorAnswer = new AnswerErrorDto();
         Optional<CaptchaCodes> optionalCaptcha = codesRepository.findByCode(dto.getCaptcha());
-        if (dto.getPassword().length() >= 6) {
-            if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(dto.getCaptcha_secret())) {
+        if (dto.getName().matches("[a-zA-ZА-Яа-я]+.?[a-zA-ZА-Яа-я]+") && dto.getName().length() > 2) {
+            if (dto.getPassword().length() < 6) throw new BadRequestException("Пароль короче 6-ти символов");
+            if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(dto.getCaptchaSecret())) {
                 if (userRepository.findByEmail(dto.getEmail()).isEmpty()) {
                     User user = new User();
                     user.setIsModerator((byte) 0);
                     user.setPassword(passwordEncoder.encode(dto.getPassword()));
-                    user.setName("User");
+                    user.setName(dto.getName());
                     user.setPhoto("img/default.c66f8640.jpg");
                     user.setEmail(dto.getEmail());
                     userRepository.save(user);
                     return null;
                 }
-                errorAnswer.getErrors().put("email", "Этот e-mail уже зарегистрирован");
-                return errorAnswer;
+                throw new BadRequestException("Этот e-mail уже зарегистрирован");
             }
-            errorAnswer.getErrors().put("captcha", "Код с картинки введён неверно");
-            return errorAnswer;
-            }
-        errorAnswer.getErrors().put("password", "Пароль короче 6-ти символов");
-        return errorAnswer;
+            throw new BadRequestException("Код с картинки введён неверно");
+        }
+        throw new BadRequestException("Имя указано неверно или меньше 3-х символов");
     }
 
     public User findById(Integer id){
@@ -129,31 +126,28 @@ public class UserServiceImpl implements UserService
         token = userRepository.save(user).getCode();
 
         String link = "http://localhost:8004/login/change-password/" + token;
-        String message = String.format("Для восстановления пароля перейдите по ссылке %s", link );
-        emailService.send(restoreDto.getEmail(), "Password recovery", message);
+        String message = String.format("<a href=\"" + link + "\">Восстановить пароль</a>");
+        emailService.send(restoreDto.getEmail(), "Восстановление пароля", message);
         return new AnswerDto(true);
     }
 
     public AnswerErrorDto setPassword(RequestSetPasswordDto requestDto){
         AnswerErrorDto errorAnswer = new AnswerErrorDto();
-        if(requestDto.getPassword().length() < 6) {
-            codesRepository.deleteAll(codesRepository.findAllOlderCodes(intervalCount));
-            Optional<CaptchaCodes> optionalCaptcha = codesRepository.findByCode(requestDto.getCaptcha());
-            if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(requestDto.getCaptchaSecret())) {
-                Optional<User> optionalUser = userRepository.findByCode(requestDto.getCode());
-                if (optionalUser.isPresent()) {
-                    User user = optionalUser.get();
-                    user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
-                    userRepository.save(user);
-                    return null;
-                }
-                else errorAnswer.getErrors().put("code", "Ссылка для восстановления пароля устарела.\n" +
-                        "<a href=”/auth/restore”>Запросить ссылку снова</a>");
+        if(requestDto.getPassword().length() < 6) throw new BadRequestException("Пароль короче 6-ти символов");
+        codesRepository.deleteAll(codesRepository.findAllOlderCodes(intervalCount));
+        Optional<CaptchaCodes> optionalCaptcha = codesRepository.findByCode(requestDto.getCaptcha());
+        if (optionalCaptcha.isPresent() && optionalCaptcha.get().getSecretCode().equals(requestDto.getCaptchaSecret())) {
+            Optional<User> optionalUser = userRepository.findByCode(requestDto.getCode());
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
+                userRepository.save(user);
+                return null;
             }
-            else errorAnswer.getErrors().put("captcha","Код с картинки введён неверно");
+            else throw new BadRequestException("Ссылка для восстановления пароля устарела.\n" +
+                    "<a href=”/auth/restore”>Запросить ссылку снова</a>");
         }
-        else errorAnswer.getErrors().put("password", "Пароль короче 6-ти символов");
-        return errorAnswer;
+        throw new BadRequestException("Код с картинки введён неверно");
     }
 
     @Override

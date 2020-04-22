@@ -112,15 +112,15 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
 
     public Map<String, Boolean> getSettings(String sessionId) {
 
-        if (userRepository.findById(providerToken.getAuthUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
+        if (providerToken.validateToken(sessionId)) {
             Map<String, Boolean> settings = globalSettingsRepository.findOnlyCodeAndValue();
             return settings;
         }
-        throw new BadRequestException("Юзер не является модератором");
+        return null;
     }
 
     public boolean setSettings(Map<String, Boolean> settings, String sessionId) {
-        if (userRepository.findById(providerToken.getAuthUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
+        if (userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
             List<GlobalSettings> listSettingsFromBD = globalSettingsRepository.findAllSettings();
             log.info(listSettingsFromBD.size() + " size list settings");
             for (String code : settings.keySet()) {
@@ -164,7 +164,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
             Post post = postRepository.findById(commentDto.getPostId()).orElse(null);
             if (post == null) throw new BadRequestException("Пост не найден");
             PostComments comment = new PostComments();
-            comment.setComment(commentDto.getText());
+            comment.setText(commentDto.getText());
             if (commentDto.getParentId() != null) {
                 User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
                 if (parentUser == null) throw new BadRequestException("Юзер не найден");

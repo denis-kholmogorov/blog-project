@@ -20,6 +20,6 @@ public class PostCommentsDto
 
     private UserDtoPhoto user;
 
-    private String comment;
+    private String text;
 
 }

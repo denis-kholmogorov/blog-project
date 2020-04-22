@@ -18,6 +18,7 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import java.util.Calendar;
 import java.util.TimeZone;
 
 @SpringBootApplication
@@ -31,12 +32,18 @@ public class Main
 
     @Bean
     public ModelMapper modelMapper() {
+
         return new ModelMapper();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @PostConstruct
+    public void init(){
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
 }

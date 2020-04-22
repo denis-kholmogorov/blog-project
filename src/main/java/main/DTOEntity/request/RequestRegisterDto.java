@@ -11,7 +11,10 @@ public class RequestRegisterDto
 
     String password;
 
+    String name;
+
     String captcha;
 
-    String captcha_secret;
+    @JsonProperty(value = "captcha_secret")
+    String captchaSecret;
 }

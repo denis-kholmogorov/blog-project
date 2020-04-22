@@ -13,8 +13,9 @@ VALUES
 ('1','1','ACCEPTED','1','post of admin','2020-04-01 22:23:01','post of admin','10','1'),
 ('2','1','ACCEPTED','1','post of user','2020-04-02 22:23:01','post of user','20','2'),
 ('3','1','ACCEPTED','1','post of user2','2020-04-03 22:23:01','post of user2','30','3'),
-('4','1','NEW','1','post of user2 NEW','2020-04-03 22:23:01','post of user2','0','3'),
-('5','1','DECLINED','1','post of user2 DECLINED','2020-04-03 22:23:01','post of user2','0','3');
+('4','1','NEW','1','post of user NEW','2020-04-03 22:23:01','post of user new','0','2'),
+('5','1','DECLINED','1','post of user DECLINED','2020-04-03 22:23:01','post of user declined','0','2'),
+('6','0','NEW','1','non active post user','2020-04-10 12:03:11','non active post user','0','2');
 
 
 
@@ -53,8 +54,8 @@ VALUES
 ('1','1','1'),
 ('2','2','2'),
 ('3','3','3'),
-('4','1','2'),
-('5','1','3');
+('4','1','2');
+
 
 INSERT INTO `blog_site_test`.`global_settings` ( `code`, `name`, `value`) VALUES
 ('MULTIUSER_MODE', 'Многопользовательский режим', 'y'),

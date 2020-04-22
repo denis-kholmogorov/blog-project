@@ -22,7 +22,7 @@ public class PostComments
     private Integer parentId;
 
     @Column(name = "comment", nullable = false, columnDefinition = "text")
-    private String comment;
+    private String text;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)

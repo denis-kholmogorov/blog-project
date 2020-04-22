@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import java.text.ParseException;
 
 @Slf4j
@@ -96,7 +97,7 @@ public class ApiPostController
     }
 
     @PostMapping()
-    public ResponseEntity<?> createPost(@RequestBody RequestPostDto post, HttpSession session) throws ParseException {
+    public ResponseEntity<AnswerDto> createPost(@RequestBody RequestPostDto post, HttpSession session) throws ParseException {
 
         AnswerDto answer = postsServiceImpl.createPost(post, session.getId());
 

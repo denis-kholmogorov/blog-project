@@ -36,8 +36,6 @@ public class PostsServiceImpl implements PostService {
     @Value("${post.min-length-text}")
     private int maxLenText;
 
-
-
     PostRepository postRepository;
 
     ModelMapper modelMapper;
@@ -95,7 +93,9 @@ public class PostsServiceImpl implements PostService {
         Pageable paging = PageRequest.of((offset/limit), limit, sort);
 
         Page<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, paging);
+        posts.forEach(p -> log.info(p.getTime().get(Calendar.HOUR_OF_DAY)+" время из базы"));
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
+        listPostsDto.getPosts();
         listPostsDto.setCount((int)posts.getTotalElements());
         return listPostsDto;
     }
@@ -122,9 +122,11 @@ public class PostsServiceImpl implements PostService {
         Integer idUser = providerToken.getUserIdBySession(session.getId());
         Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
 
+
         if (idUser != null && providerToken.validateToken(session.getId())) {
             User user = userRepository.findById(idUser).orElseThrow(BadRequestException::new);
             if(!user.getId().equals(post.getUser().getId())){
+                log.info(post.getTime().get(Calendar.HOUR)+"");
                 post.setViewCount(post.getViewCount() + 1);
                 post = postRepository.save(post);
             }
@@ -222,12 +224,14 @@ public class PostsServiceImpl implements PostService {
         Integer userId = providerToken.getAuthUserIdBySession(session);
         User user = userRepository.findById(userId).orElseThrow(BadRequestException::new);
 
-        GlobalSettings settings = globalSettingsRepository.findByCode("MULTIUSER_MODE").orElseThrow(BadRequestException::new);
-        if(settings.isValue() || user.getIsModerator() == (byte)1) {
+        GlobalSettings multiuserMode = globalSettingsRepository.findByCode("MULTIUSER_MODE").orElseThrow(BadRequestException::new);
+        GlobalSettings postPremoderation = globalSettingsRepository.findByCode("POST_PREMODERATION").orElseThrow(BadRequestException::new);
+        if(multiuserMode.isValue() || user.getIsModerator() == (byte)1) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String formatTime = postDto.getTime().replace("T", " ");
             Calendar time = Calendar.getInstance();
             time.setTime(sdf.parse(formatTime));
+            log.info(String.valueOf(Calendar.getInstance().get(Calendar.HOUR)));
             Calendar now = Calendar.getInstance();
             now.add(Calendar.MINUTE, 1);
             if (time.before(now)) {
@@ -243,7 +247,14 @@ public class PostsServiceImpl implements PostService {
             post.setText(postDto.getText());
             post.setTitle(postDto.getTitle());
             post.setViewCount(0);
-            post.setModerationStatus(ModerationStatus.NEW);
+            if(postPremoderation.isValue()) {
+                post.setModerationStatus(ModerationStatus.NEW);
+            }
+            else {
+                post.setModerationStatus(ModerationStatus.ACCEPTED);
+            }
+
+            log.info(time.get(Calendar.HOUR)+" время сохранения");
             postRepository.save(post);
             postDto.getTags().forEach(t -> {
                 Tag tag = tagRepository.findByName(t).orElse(null);
@@ -341,34 +352,35 @@ public class PostsServiceImpl implements PostService {
             return new AnswerDto(true);
         }
     }
-        public AnswerDto setDislikePost(LikeRequestDto likeDto, HttpSession session){
-            Integer userId = providerToken.getAuthUserIdBySession(session.getId());
-            PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
-            Post post = postRepository.findById(likeDto.getPostId()).orElseThrow(CustomNotFoundException::new);
-            if (votes == null) {
-                PostVotes postVotes = PostVotes.builder()
-                        .postId(likeDto.getPostId())
-                        .userId(userId)
-                        .time(LocalDateTime.now())
-                        .value((short) -1)
-                        .build();
-                postVotesRepository.save(postVotes);
-                post.getDisLikesUsers().add(postVotes);
-                return new AnswerDto(true);
-            }
-
-            if (votes.getValue() == (short) -1) {
-                return new AnswerDto(false);
-            } else{
-                votes.setValue((short) -1);
-                postVotesRepository.save(votes);
-                return new AnswerDto(true);
-            }
-
+    public AnswerDto setDislikePost(LikeRequestDto likeDto, HttpSession session){
+        Integer userId = providerToken.getAuthUserIdBySession(session.getId());
+        PostVotes votes = postVotesRepository.findByPostIdAndUserId(likeDto.getPostId(), userId).orElse(null);
+        Post post = postRepository.findById(likeDto.getPostId()).orElseThrow(CustomNotFoundException::new);
+        if (votes == null) {
+            PostVotes postVotes = PostVotes.builder()
+                    .postId(likeDto.getPostId())
+                    .userId(userId)
+                    .time(LocalDateTime.now())
+                    .value((short) -1)
+                    .build();
+            postVotesRepository.save(postVotes);
+            post.getDisLikesUsers().add(postVotes);
+            return new AnswerDto(true);
         }
+
+        if (votes.getValue() == (short) -1) {
+            return new AnswerDto(false);
+        } else{
+            votes.setValue((short) -1);
+            postVotesRepository.save(votes);
+            return new AnswerDto(true);
+        }
+
+    }
 
     private PostDto convertToDTO(Post post) {
         PostDto postDto = modelMapper.map(post, PostDto.class);
+        postDto.setTime(post.getTime());
         postDto.setLikeCount(post.getLikesUsers().size());
         postDto.setDislikeCount(post.getDisLikesUsers().size());
         postDto.setAnnounce(post.getText());
