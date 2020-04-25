@@ -29,7 +29,6 @@ public class Main
         SpringApplication.run(Main.class, args);
     }
 
-
     @Bean
     public ModelMapper modelMapper() {
 
@@ -40,12 +39,6 @@ public class Main
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
-    @PostConstruct
-    public void init(){
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    }
-
 }
 
 

@@ -42,9 +42,6 @@ public class CaptchaServiceImpl
         CaptchaCodes captcha = new CaptchaCodes();
         captcha.setCode(imageCode);
         captcha.setSecretCode(secretCode);
-        Calendar timeNow = Calendar.getInstance();
-        timeNow.add(Calendar.HOUR,3);
-        captcha.setTime(timeNow);
         codesRepository.save(captcha);
         CaptchaDto captchaDto = new CaptchaDto(secretCode, encodeImage);
         codesRepository.deleteAll(codesRepository.findAllOlderCodes(intervalCountTime));

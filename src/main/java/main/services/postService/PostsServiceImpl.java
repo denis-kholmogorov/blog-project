@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -123,19 +124,22 @@ public class PostsServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow(BadRequestException::new);
 
 
-        if (idUser != null && providerToken.validateToken(session.getId())) {
-            User user = userRepository.findById(idUser).orElseThrow(BadRequestException::new);
-            if(!user.getId().equals(post.getUser().getId())){
-                log.info(post.getTime().get(Calendar.HOUR)+"");
-                post.setViewCount(post.getViewCount() + 1);
-                post = postRepository.save(post);
-            }
-        }
         post.getComments().forEach(e -> e.getUser().setPhoto(""));
         PostDtoId postDtoId = modelMapper.map(post, PostDtoId.class);
         postDtoId.setTags(post.getSetTags().stream().map(Tag::getName).collect(Collectors.toSet()));
         postDtoId.setLikeCount(post.getLikesUsers().size());
         postDtoId.setDislikeCount(post.getDisLikesUsers().size());
+
+        if (idUser != null && providerToken.validateToken(session.getId())) {
+            User user = userRepository.findById(idUser).orElseThrow(BadRequestException::new);
+            if(!user.getId().equals(post.getUser().getId())){
+                Calendar time = post.getTime();
+                time.add(Calendar.HOUR, -3);
+                post.setTime(time);
+                post.setViewCount(post.getViewCount()+1);
+                post = postRepository.save(post);
+            }
+        }
 
         return postDtoId;
     }

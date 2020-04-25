@@ -1,6 +1,7 @@
 package main.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import main.DTOEntity.LikeRequestDto;
 import main.DTOEntity.request.RequestPostDto;
 import main.security.ProviderToken;
 import org.junit.Before;
@@ -228,19 +229,66 @@ public class ApiPostControllerTest {
 
     @Test
     public void postSetLikePost() throws Exception {
-       /* mvc.perform(post("/api/post/like")
-                .param("post_id","2")
+        LikeRequestDto like = new LikeRequestDto();
+        like.setPostId(2);
+
+        mvc.perform(post("/api/post/like")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(like))
                 .session(session)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result", is(true)));*/
+                .andExpect(jsonPath("$.result", is(true)));
 
     }
 
     @Test
-    public void postSetDislikePost() {
+    public void postSetErrorLikePost() throws Exception {
+        LikeRequestDto like = new LikeRequestDto();
+        like.setPostId(9);
+
+        mvc.perform(post("/api/post/like")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(like))
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(status().isNotFound());
     }
+
+    @Test
+    public void postSetDislikePost() throws Exception {
+        LikeRequestDto like = new LikeRequestDto();
+        like.setPostId(2);
+
+        mvc.perform(post("/api/post/dislike")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(like))
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", is(true)));
+
+    }
+
+    @Test
+    public void postSetErrorDislikePost() throws Exception {
+        LikeRequestDto like = new LikeRequestDto();
+        like.setPostId(9);
+
+        mvc.perform(post("/api/post/dislike")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(like))
+                .session(session)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(status().isNotFound());
+    }
+
 
     @Test
     public void putChangePost() throws Exception {
