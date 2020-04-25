@@ -11,6 +11,7 @@ import main.model.*;
 import main.repositories.*;
 import main.security.ProviderToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -180,7 +181,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
         } else {
             Map<String, String> error = new HashMap<>();
             error.put("text", "Текст комментария не задан или слишком короткий");
-            return ResponseEntity.ok(new AnswerErrorDto(false, error));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new AnswerErrorDto(false, error));
         }
     }
 
@@ -200,13 +201,15 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
             } else if (profileDto.getPassword() != null && profileDto.getPassword().length() > 0 && profileDto.getPassword().length() < 6) {
                 log.info(profileDto.getPassword() + " password");
                 errors.getErrors().put("password", "Пароль короче 6-ти символов");
-                return ResponseEntity.ok(errors);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
             }
 
-            if (profileDto.getName().matches("[a-zA-ZА-Яа-я]+.?[a-zA-ZА-Яа-я]+") && profileDto.getName().length() > 2) {
+            if (profileDto.getName() != null && profileDto.getName().matches("[a-zA-ZА-Яа-я]+.?[a-zA-ZА-Яа-я]+")
+                    && profileDto.getName().length() > 2) {
                 user.setName(profileDto.getName());
             } else {
                 errors.getErrors().put("name", "Имя указано неверно");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
             }
 
             if (profileDto.getEmail() != null) {
@@ -217,7 +220,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
                     log.info("Email " + profileDto.getEmail() + " не изменен");
                 } else {
                     errors.getErrors().put("email", "Этот e-mail уже зарегистрирован");
-                    return ResponseEntity.ok(errors);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
                 }
             }
             if (profileDto.getRemovePhoto() != null) {

@@ -43,7 +43,7 @@ public interface PostRepository extends PagingAndSortingRepository<Post,Integer>
             " YEAR(p.time) = :year group by date(p.time)")
     List<String> findCountPostForCalendar(Integer year);
 
-    @Query(value="select year(p.time) from Post p WHERE  p.time < curtime() group by year(p.time)")
+    @Query(value="select year(p.time) from Post p WHERE p.time < curtime() group by year(p.time)")
     List<Integer> findAllYearWithPosts();
 
     @Query(value = "SELECT p FROM Post p")

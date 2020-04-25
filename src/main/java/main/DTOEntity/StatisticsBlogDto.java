@@ -38,7 +38,11 @@ public class StatisticsBlogDto
             {
                 this.firstPublication = post.getTime();
             }
-            if(this.firstPublication.after(post.getTime()));
+            if(this.firstPublication.getTime() == null)
+            {
+                this.firstPublication = post.getTime();
+            }
+            else if(this.firstPublication.after(post.getTime()))
             {
                 this.firstPublication = post.getTime();
             }
