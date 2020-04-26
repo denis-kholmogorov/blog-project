@@ -1,5 +1,6 @@
 package main.services.postService;
 
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
 import main.CustomException.CustomNotFoundException;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-@Slf4j
+@Log4j2
 @Service
 public class PostsServiceImpl implements PostService {
 
@@ -94,7 +95,6 @@ public class PostsServiceImpl implements PostService {
         Pageable paging = PageRequest.of((offset/limit), limit, sort);
 
         Page<Post> posts = postRepository.findDistinctByActiveAndModerationStatus((byte) 1, ModerationStatus.ACCEPTED, paging);
-        posts.forEach(p -> log.info(p.getTime().get(Calendar.HOUR_OF_DAY)+" время из базы"));
         ListPostsDto listPostsDto = new ListPostsDto(posts.stream().map(this::convertToDTO).collect(Collectors.toList()));
         listPostsDto.getPosts();
         listPostsDto.setCount((int)posts.getTotalElements());
@@ -197,7 +197,7 @@ public class PostsServiceImpl implements PostService {
                 .stream()
                 .map(MyPostDto::new)
                 .collect(Collectors.toList());
-        log.info("количество записей " + userId + " равно " + myPosts.size());
+        log.info("Количество постов " + userId + " равно " + myPosts.size());
         ListPostsDto listPostsDto = new ListPostsDto(myPosts);
         listPostsDto.setCount((int)page.getTotalElements());
         return listPostsDto;
@@ -257,9 +257,8 @@ public class PostsServiceImpl implements PostService {
             else {
                 post.setModerationStatus(ModerationStatus.ACCEPTED);
             }
-
-            log.info(time.get(Calendar.HOUR)+" время сохранения");
-            postRepository.save(post);
+            Post newPost = postRepository.save(post);
+            log.info("Создан новый пост с id " + newPost.getId());
             postDto.getTags().forEach(t -> {
                 Tag tag = tagRepository.findByName(t).orElse(null);
                 TagToPost tp = new TagToPost();
@@ -345,6 +344,7 @@ public class PostsServiceImpl implements PostService {
                     .build();
             postVotesRepository.save(postVotes);
             post.getLikesUsers().add(postVotes);
+            log.info("к посту с id {} был добавлен like", likeDto.getPostId());
             return new AnswerDto(true);
         }
 
@@ -353,6 +353,7 @@ public class PostsServiceImpl implements PostService {
         } else {
             votes.setValue((short) 1);
             postVotesRepository.save(votes);
+            log.info("dislike к посту с id {} был изменен на like", likeDto.getPostId());
             return new AnswerDto(true);
         }
     }
@@ -369,6 +370,7 @@ public class PostsServiceImpl implements PostService {
                     .build();
             postVotesRepository.save(postVotes);
             post.getDisLikesUsers().add(postVotes);
+            log.info("к посту с id {} был добавлен dislike", likeDto.getPostId());
             return new AnswerDto(true);
         }
 
@@ -377,6 +379,7 @@ public class PostsServiceImpl implements PostService {
         } else{
             votes.setValue((short) -1);
             postVotesRepository.save(votes);
+            log.info("like к посту с id {} был изменен на dislike", likeDto.getPostId());
             return new AnswerDto(true);
         }
 

@@ -1,5 +1,6 @@
 package main.services.userService;
 
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import main.CustomException.BadRequestException;
 import main.CustomException.CustomNotFoundException;
@@ -27,7 +28,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
+@Log4j2
 @Service
 public class UserServiceImpl implements UserService
 {

@@ -1,5 +1,6 @@
 package main.controllers;
 
+import lombok.extern.log4j.Log4j2;
 import main.CustomException.BadRequestException;
 import main.CustomException.CustomNotFoundException;
 import main.security.UserAuthenticationException;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import javax.validation.ConstraintViolationException;
 
+@Log4j2
 @ControllerAdvice
 public class ExceptionHandlerController extends ResponseEntityExceptionHandler{
 

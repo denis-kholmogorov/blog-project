@@ -1,6 +1,6 @@
 package main.services.apiGeneralSevice;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import main.CustomException.BadRequestException;
 import main.DTOEntity.*;
 import main.DTOEntity.request.RequestCommentsDto;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
+@Log4j2
 @Service
 public class ApiGeneralServiceImpl implements ApiGeneralService {
 
@@ -123,12 +123,11 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
     public boolean setSettings(Map<String, Boolean> settings, String sessionId) {
         if (userRepository.findById(providerToken.getUserIdBySession(sessionId)).get().getIsModerator() == (byte) 1) {
             List<GlobalSettings> listSettingsFromBD = globalSettingsRepository.findAllSettings();
-            log.info(listSettingsFromBD.size() + " size list settings");
             for (String code : settings.keySet()) {
-                log.info(code + " номер кода");
+                log.info(code + " номер кода настройки для изменения");
                 listSettingsFromBD.forEach(gs -> {
                     if (code.equals(gs.getCode())) {
-                        log.info("Changed value setting " + code);
+                        log.info("Изменение настройки " + code);
                         gs.setValue(settings.get(code));
                     }
                 });
@@ -215,6 +214,8 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
             if (profileDto.getEmail() != null) {
                 String emailUser = null;
                 if (!userRepository.existsByEmail(profileDto.getEmail())) {
+                    log.info("Пользователь c email " + user.getEmail() +
+                            " изменил email на " + profileDto.getEmail());
                     user.setEmail(profileDto.getEmail());
                 } else if (user.getEmail().equals(profileDto.getEmail())) {
                     log.info("Email " + profileDto.getEmail() + " не изменен");
@@ -230,15 +231,14 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
                     if (((RequestProfileWithPhotoDto) profileDto).getPhoto() != null) {
                         try {
                             user.setPhoto(loadAvatar(((RequestProfileWithPhotoDto) profileDto).getPhoto().getBytes()));
-                            log.info("Картинка загрузилась");
+                            log.info("Фото изменено");
                         } catch (IOException e) {
-                            log.warn("Файл не загружен");
+                            log.warn("Фото не загружено");
                         }
                     }
                 }
             }
-            User userSaved = userRepository.save(user);
-            log.info(userSaved.toString() + " сохранен");
+            userRepository.save(user);
             return ResponseEntity.ok(new AnswerDto(true));
         }
         return null;
