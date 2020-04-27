@@ -344,7 +344,7 @@ public class PostsServiceImpl implements PostService {
                     .build();
             postVotesRepository.save(postVotes);
             post.getLikesUsers().add(postVotes);
-            log.info("к посту с id {} был добавлен like", likeDto.getPostId());
+            log.info("к посту с id {} был добавлен like пользователем {}", likeDto.getPostId(), userId);
             return new AnswerDto(true);
         }
 
@@ -353,7 +353,7 @@ public class PostsServiceImpl implements PostService {
         } else {
             votes.setValue((short) 1);
             postVotesRepository.save(votes);
-            log.info("dislike к посту с id {} был изменен на like", likeDto.getPostId());
+            log.info("dislike к посту с id {} был изменен на like пользователем {}", likeDto.getPostId(), userId);
             return new AnswerDto(true);
         }
     }
@@ -370,7 +370,7 @@ public class PostsServiceImpl implements PostService {
                     .build();
             postVotesRepository.save(postVotes);
             post.getDisLikesUsers().add(postVotes);
-            log.info("к посту с id {} был добавлен dislike", likeDto.getPostId());
+            log.info("к посту с id {} был добавлен dislike пользолвателем {}", likeDto.getPostId(), userId);
             return new AnswerDto(true);
         }
 
@@ -379,7 +379,7 @@ public class PostsServiceImpl implements PostService {
         } else{
             votes.setValue((short) -1);
             postVotesRepository.save(votes);
-            log.info("like к посту с id {} был изменен на dislike", likeDto.getPostId());
+            log.info("like к посту с id {} был изменен на dislike пользователем {}", likeDto.getPostId(), userId);
             return new AnswerDto(true);
         }
 

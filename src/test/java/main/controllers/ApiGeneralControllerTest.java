@@ -7,9 +7,11 @@ import main.DTOEntity.SettingsDto;
 import main.DTOEntity.request.RequestCommentsDto;
 import main.DTOEntity.request.RequestProfileDto;
 import main.security.ProviderToken;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +23,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -47,6 +50,16 @@ class ApiGeneralControllerTest {
     ApiGeneralControllerTest(MockMvc mvc, ProviderToken providerToken) {
         this.mvc = mvc;
         this.providerToken = providerToken;
+    }
+
+ /*   @BeforeEach
+    void setUp() {
+        providerToken.createToken("1",1);
+    }*/
+
+    @AfterEach
+    void afterAll() {
+        providerToken.deleteToken("1");
     }
 
     @Test
@@ -105,9 +118,9 @@ class ApiGeneralControllerTest {
     @Test
     @SneakyThrows
     void getMyStatistics() {
-        providerToken.createToken("1",1);
+      //  providerToken.createToken("1",1);
         ResultActions perform = mvc.perform(get("/api/statistics/my")
-               .session(session)
+                .session(session)
                 .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -132,11 +145,6 @@ class ApiGeneralControllerTest {
                 .andExpect(jsonPath("$.dislikesCount",is(0)))
                 .andExpect(jsonPath("$.viewsCount",is(60)))
                 .andExpect(jsonPath("$.firstPublication", is("01.04.2020 22:23:01")));
-    }
-
-    @Test
-    void uploadImage() {
-
     }
 
     @Test

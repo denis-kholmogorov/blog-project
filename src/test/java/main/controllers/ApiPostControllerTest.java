@@ -7,6 +7,7 @@ import main.security.ProviderToken;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,10 @@ public class ApiPostControllerTest {
 
     private static final ObjectMapper om = new ObjectMapper();
 
+    @AfterEach
+    void afterAll() {
+        providerToken.deleteToken("1");
+    }
 
     @Before
     public void setUp() throws Exception {

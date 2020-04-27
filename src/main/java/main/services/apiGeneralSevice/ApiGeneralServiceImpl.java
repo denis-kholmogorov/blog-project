@@ -152,6 +152,9 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
                 post.setModeratorId(user.getId());
             }
             assert post != null;
+            Calendar time = post.getTime();
+            time.add(Calendar.HOUR, -3);
+            post.setTime(time);
             postRepository.save(post);
             log.info(post.getModeratorId() + " " + post.getModerationStatus());
         }
@@ -166,8 +169,8 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
             PostComments comment = new PostComments();
             comment.setText(commentDto.getText());
             if (commentDto.getParentId() != null) {
-                User parentUser = userRepository.findById(commentDto.getParentId()).orElse(null);
-                if (parentUser == null) throw new BadRequestException("Юзер не найден");
+
+                if (!commentsRepository.existsById(commentDto.getParentId())) throw new BadRequestException("Коммент не существует");
                 comment.setParentId(commentDto.getParentId());
             }
             Optional<User> userOptional = userRepository.findById(providerToken.getAuthUserIdBySession(session.getId()));
@@ -176,6 +179,7 @@ public class ApiGeneralServiceImpl implements ApiGeneralService {
             comment.setPost(post);
             Integer commentId = commentsRepository.save(comment).getId();
             postRepository.save(post);
+            log.info("Комментарий с id {} добавлен к посту {}",commentId, post.getId());
             return ResponseEntity.ok(new AnswerComentDto(commentId));
         } else {
             Map<String, String> error = new HashMap<>();

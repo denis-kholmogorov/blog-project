@@ -1,5 +1,6 @@
 package main;
 
+import org.hibernate.annotations.SQLInsert;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,6 +21,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.util.Calendar;
 import java.util.TimeZone;
+
 
 @SpringBootApplication
 public class Main

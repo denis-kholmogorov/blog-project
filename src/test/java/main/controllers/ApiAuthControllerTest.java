@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import main.DTOEntity.request.RequestLoginDto;
 import main.DTOEntity.request.RequestRegisterDto;
 import main.security.ProviderToken;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,11 @@ class ApiAuthControllerTest {
     ApiAuthControllerTest(MockMvc mvc, ProviderToken providerToken) {
         this.mvc = mvc;
         this.providerToken = providerToken;
+    }
+
+    @AfterEach
+    void afterAll() {
+        providerToken.deleteToken("1");
     }
 
     @Test
